@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2021.1 (64-bit)
+# SW Build 3247384 on Thu Jun 10 19:36:33 MDT 2021
+# IP Build 3246043 on Fri Jun 11 00:30:35 MDT 2021
+# Start of session at: Sat Apr 16 17:00:33 2022
+# Process ID: 25608
+# Current directory: D:/Projects/Prozessor_Design/da_real_8bit/da_real_8bit.runs/impl_1
+# Command line: vivado.exe -log toplevel.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source toplevel.tcl -notrace
+# Log file: D:/Projects/Prozessor_Design/da_real_8bit/da_real_8bit.runs/impl_1/toplevel.vdi
+# Journal file: D:/Projects/Prozessor_Design/da_real_8bit/da_real_8bit.runs/impl_1\vivado.jou
+#-----------------------------------------------------------
+source toplevel.tcl -notrace

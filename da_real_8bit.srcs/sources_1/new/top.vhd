@@ -364,8 +364,10 @@ cpu_reset <= btnC AND btnD AND btnU;
 
 -- z-addr logic: the src of the z_addr can be immdiate_values (LDI), Data memory Load (LD), MOV and the result of an ALU op
 z_data_src_bus  <= dec_rf_im & dec_mux_alu_dm;        -- need to figure out the source of the data
-z_addr_r31_we   <= '1' when (dec_rf_addr_opA = "11111" AND dec_rf_we = '1') else '0';
-z_addr_r30_we   <= '1' when (dec_rf_addr_opA = "11110" AND dec_rf_we = '1') else '0';
+--z_addr_r31_we   <= '1' when ((dec_rf_addr_opA(4) AND dec_rf_addr_opA(3) AND dec_rf_addr_opA(2) AND dec_rf_addr_opA(1) AND dec_rf_addr_opA(0) = '1') AND dec_rf_we = '1') else '0';
+z_addr_r31_we   <= dec_rf_addr_opA(4) AND dec_rf_addr_opA(3) AND dec_rf_addr_opA(2) AND dec_rf_addr_opA(1) AND dec_rf_addr_opA(0) AND dec_rf_we;
+--z_addr_r30_we   <= '1' when (dec_rf_addr_opA = "11110" AND dec_rf_we = '1') else '0';
+z_addr_r30_we   <= dec_rf_addr_opA(4) AND dec_rf_addr_opA(3) AND dec_rf_addr_opA(2) AND dec_rf_addr_opA(1) AND NOT dec_rf_addr_opA(0) AND dec_rf_we;
 --z_data_in       <= dec_im_val when z_data_src_bus = "10" else
 --                rf_alu_data_a when z_data_src_bus = "00" else
 --                mux_alu_dm_data when z_data_src_bus = "01" else (others => '0');

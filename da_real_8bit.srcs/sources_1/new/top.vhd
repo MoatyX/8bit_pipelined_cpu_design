@@ -52,8 +52,6 @@ signal dec_dm_we                : std_logic;
 signal dec_mux_alu_dm           : std_logic;
 signal dec_pc_override_enable   : std_logic;
 signal dec_pc_override_offset   : std_logic_vector(11 downto 0);
-signal dec_sreg_override        : std_logic;
-signal dec_sreg_override_val    : std_logic_vector(7 downto 0);
 signal dec_sp_op                : std_logic;
 signal dec_sp_use               : std_logic;
 
@@ -104,8 +102,6 @@ signal pl_exec_alu_im                   : std_logic;
 signal pl_exec_im_val                   : std_logic_vector(7 downto 0);
 signal pl_exec_dataMem_we               : std_logic;
 signal pl_exec_mux_alu_dm               : std_logic;
-signal pl_exec_sreg_override            : std_logic;
-signal pl_exec_sreg_override_val        : std_logic_vector(7 downto 0);
 signal pl_exec_sp_op                    : std_logic;
 signal pl_exec_sp_use                   : std_logic;
 signal pl_exec_addr_a                   : std_logic_vector(4 downto 0);
@@ -166,8 +162,6 @@ component decoder is
         alu_dm_mux          : out std_logic;
         pc_force_override   : out std_logic;
         pc_override_offset  : out std_logic_vector(11 downto 0);
-        sreg_override       : out std_logic;
-        sreg_override_val   : out std_logic_vector(7 downto 0);
         sp_op               : out std_logic;
         use_sp_addr         : out std_logic
     );
@@ -202,9 +196,7 @@ component sreg
             reset           : in std_logic;
          w_e_sreg           : in std_logic_vector (7 downto 0);
          new_status_in      : in STD_LOGIC_VECTOR (7 downto 0);
-         curr_status_out    : out STD_LOGIC_VECTOR (7 downto 0) := (others => '0');   --init everything to 0
-         override           : in std_logic;
-         override_val       : in std_logic_vector (7 downto 0)
+         curr_status_out    : out STD_LOGIC_VECTOR (7 downto 0)
         );
 end component;
 
@@ -319,8 +311,6 @@ port map (
     alu_dm_mux          => dec_mux_alu_dm,
     pc_force_override   => dec_pc_override_enable,
     pc_override_offset  => dec_pc_override_offset,
-    sreg_override       => dec_sreg_override,
-    sreg_override_val   => dec_sreg_override_val,
     sp_op               => dec_sp_op,
     use_sp_addr         => dec_sp_use
 );
@@ -339,7 +329,7 @@ port map(
 
 alu0: ALU
 port map(
-    OPCODE              => dec_alu_op_code,
+    OPCODE              => pl_exec_alu_op_code,
     OPA                 => exec_feedfwd_data_a_out,
     OPB                 => exec_feedfwd_data_b_out,
     RES                 => alu_mux_dm_output,
@@ -354,9 +344,7 @@ port map(
     reset           => cpu_reset,
     w_e_sreg        => pl_exec_sreg_we,
     new_status_in   => alu_sreg_new_sreg,
-    curr_status_out => sreg_alu_curr_status,
-    override        => pl_exec_sreg_override,
-    override_val    => pl_exec_sreg_override_val
+    curr_status_out => sreg_alu_curr_status
 );
 
 --TODO needs another thought
@@ -449,8 +437,6 @@ begin
         pl_exec_sreg_we             <= dec_sreg_we;
         pl_exec_dataMem_we          <= dec_dm_we;
         pl_exec_mux_alu_dm          <= dec_mux_alu_dm;
-        pl_exec_sreg_override       <= dec_sreg_override;
-        pl_exec_sreg_override_val   <= dec_sreg_override_val;
         pl_exec_sp_op               <= dec_sp_op;
         pl_exec_sp_use              <= dec_sp_use;
         pl_exec_im_val              <= dec_im_val;
@@ -470,7 +456,6 @@ begin
         pl_wb_rf_we         <= pl_exec_rf_we;
         pl_wb_mux_alu_dm    <= pl_exec_mux_alu_dm;
         pl_wb_addr_a        <= pl_exec_addr_a;
-        pl_wb_rf_we         <= pl_exec_rf_we;
         pl_wb_dm_res        <= dm_mux_data_out;
         pl_wb_alu_res       <= alu_mux_dm_output;
     end if;

@@ -8,8 +8,8 @@ entity toplevel is
     port (
 
         -- global ports
---        clk_in     : in STD_LOGIC;
-        clk     : in std_logic;
+        clk_in     : in STD_LOGIC;
+--        clk     : in std_logic;
 
         led     : out std_logic_vector(15 downto 0) := (others => '1');
         sw      : in std_logic_vector(15 downto 0);
@@ -29,6 +29,7 @@ end toplevel;
 architecture behavioral of toplevel is
 
 --CPU
+signal clk      : std_logic;
 signal cpu_reset: std_logic;
 -----------------------------------
 
@@ -68,11 +69,8 @@ signal alu_sreg_new_sreg        : std_logic_vector(7 downto 0);
 signal sreg_alu_curr_status     : std_logic_vector(7 downto 0);
 
 --Z-Address
-signal dm_z_addr                    : std_logic_vector(9 downto 0);
-signal z_data_src_bus               : std_logic_vector(1 downto 0);
-signal z_addr_r31_we, z_addr_r30_we : std_logic := '0';
+signal mux_dm_z_addr_out            : std_logic_vector(9 downto 0);
 signal z_addr_out                   : std_logic_vector (9 downto 0);
-signal z_data_in                    : std_logic_vector (7 downto 0);
 
 --Stackpointer
 signal sp_dm_addr                   : std_logic_vector(9 downto 0);
@@ -89,9 +87,53 @@ signal io_seg3          :std_logic_vector(7 downto 0);
 signal port_for_btns    : std_logic_vector(7 downto 0);
 
 --MUXing
-signal mux_alu_dm_data          : std_logic_vector(7 downto 0);
+signal mux_wb_data          : std_logic_vector(7 downto 0);
 signal mux_wb_im_rf_data_in     : std_logic_vector(7 downto 0);
 signal mux_rf_dec_alu_data_b_in : std_logic_vector(7 downto 0);
+
+----------------------Pipelining Signals--------------------------------------------------------
+--Fetch <---> Decode
+signal pl_fetch_dec_instr       : std_logic_vector(15 downto 0);
+
+--Decode <-----> Execute
+signal pl_exec_alu_op_code              : std_logic_vector(3 downto 0);
+signal pl_exec_rf_we                    : std_logic;
+signal pl_exec_sreg_we                  : std_logic_vector(7 downto 0);
+signal pl_exec_rf_im                    : std_logic;
+signal pl_exec_alu_im                   : std_logic;
+signal pl_exec_im_val                   : std_logic_vector(7 downto 0);
+signal pl_exec_dataMem_we               : std_logic;
+signal pl_exec_mux_alu_dm               : std_logic;
+signal pl_exec_sreg_override            : std_logic;
+signal pl_exec_sreg_override_val        : std_logic_vector(7 downto 0);
+signal pl_exec_sp_op                    : std_logic;
+signal pl_exec_sp_use                   : std_logic;
+signal pl_exec_addr_a                   : std_logic_vector(4 downto 0);
+signal pl_exec_addr_b                   : std_logic_vector(4 downto 0);
+signal pl_exec_z_addr                   : std_logic_vector(9 downto 0);
+signal pl_exec_data_a                   : std_logic_vector(7 downto 0);
+signal pl_exec_data_b                   : std_logic_vector(7 downto 0);
+
+--Execute <-----> Writeback
+signal pl_wb_addr_a                     : std_logic_vector(4 downto 0);
+signal pl_wb_rf_we                      : std_logic;
+signal pl_wb_mux_alu_dm                 : std_logic;
+signal pl_wb_alu_res                    : std_logic_vector(7 downto 0);
+signal pl_wb_dm_res                     : std_logic_vector(7 downto 0);
+
+
+--Executre Feedforwarding mechanic
+signal dc_feedfwd_data_a_condition      : std_logic := '0';
+signal dc_feedfwd_data_b_condition      : std_logic := '0';
+signal dc_feedfwd_data_a_out            : std_logic_vector(7 downto 0);
+signal dc_feedfwd_data_b_out            : std_logic_vector(7 downto 0);
+signal exec_feedfwd_data_a_condition    : std_logic := '0';
+signal exec_feedfwd_data_b_condition    : std_logic := '0';
+signal exec_feedfwd_data_a_out          : std_logic_vector(7 downto 0);
+signal exec_feedfwd_data_b_out          : std_logic_vector(7 downto 0);
+
+
+--------------------------------------------------------------------------------
 
 component program_counter is
     port (
@@ -167,12 +209,12 @@ component sreg
 end component;
 
 component z_addr
-Port (   clk            : in STD_LOGIC;
-         reset          : in STD_LOGIC;
-         rf_addr_r30    : in STD_LOGIC;
-         rf_addr_r31    : in STD_LOGIC;
-         z_addr_val     : in STD_LOGIC_VECTOR (7 downto 0);
-         z_addr_out     : out STD_LOGIC_VECTOR (9 downto 0));
+Port (   clk                    : in STD_LOGIC;
+         reset                  : in STD_LOGIC;
+         addr_a                 : in std_logic_vector(4 downto 0);
+         rf_write_enable_status : in std_logic;
+         data_in                : in STD_LOGIC_VECTOR (7 downto 0);
+         z_addr_out             : out STD_LOGIC_VECTOR (9 downto 0));
 end component;
 
 component stackpointer
@@ -225,6 +267,25 @@ component seg_view_controller
             db      : out STD_LOGIC);
 end component;
 
+component clk_wiz_0
+    port (
+        clk_out1: out std_logic;
+        reset: in std_logic;
+        locked: out std_logic;
+        clk_in1: in std_logic
+    );
+end component;
+
+component pipeline_register is
+        generic(reg_width: integer);
+        port(
+            clk: in std_logic;
+            reset: in std_logic;
+            data_in: in std_logic_vector(reg_width-1 downto 0);
+            data_out: out std_logic_vector(reg_width-1 downto 0)
+        );
+end component;
+
 begin
 
 pc: program_counter
@@ -244,7 +305,7 @@ port map(
 
 dec: decoder
 port map (
-    Instr               => pm_dec_instr,
+    Instr               => pl_fetch_dec_instr,
     addr_opa            => dec_rf_addr_opA,
     addr_opb            => dec_rf_addr_opB,
     alu_op_code         => dec_alu_op_code,
@@ -269,8 +330,8 @@ port map(
     clk         => clk,
     addr_opa    => dec_rf_addr_opA,
     addr_opb    => dec_rf_addr_opB,
-    write_addr  => dec_rf_addr_opA,
-    w_e_regfile => dec_rf_we,
+    write_addr  => pl_wb_addr_a,
+    w_e_regfile => pl_wb_rf_we,
     data_opa    => rf_alu_data_a,
     data_opb    => rf_alu_data_b,
     data_in     => mux_wb_im_rf_data_in
@@ -279,8 +340,8 @@ port map(
 alu0: ALU
 port map(
     OPCODE              => dec_alu_op_code,
-    OPA                 => rf_alu_data_a,
-    OPB                 => mux_rf_dec_alu_data_b_in,
+    OPA                 => exec_feedfwd_data_a_out,
+    OPB                 => exec_feedfwd_data_b_out,
     RES                 => alu_mux_dm_output,
     new_status          => alu_sreg_new_sreg,
     status_in           => sreg_alu_curr_status,
@@ -291,47 +352,48 @@ sreg0: sreg
 port map(
     clk             => clk,
     reset           => cpu_reset,
-    w_e_sreg        => dec_sreg_we,
+    w_e_sreg        => pl_exec_sreg_we,
     new_status_in   => alu_sreg_new_sreg,
     curr_status_out => sreg_alu_curr_status,
-    override        => dec_sreg_override,
-    override_val    => dec_sreg_override_val
+    override        => pl_exec_sreg_override,
+    override_val    => pl_exec_sreg_override_val
 );
 
+--TODO needs another thought
 z_addr0: z_addr
 port map (
-    clk         => clk,       
-    reset       => cpu_reset,
-    rf_addr_r30 => z_addr_r30_we,
-    rf_addr_r31 => z_addr_r31_we,
-    z_addr_val  => z_data_in,
-    z_addr_out  => z_addr_out
+    clk                     => clk,       
+    reset                   => cpu_reset,
+    addr_a                  => pl_exec_addr_a,
+    rf_write_enable_status  => pl_exec_rf_we,
+    data_in                 => mux_wb_im_rf_data_in,
+    z_addr_out              => z_addr_out
 );
 
 sp: stackpointer
 port map(
     clk     => clk,
     reset   => cpu_reset,
-    op      => dec_sp_op,     
-    use_sp  => dec_sp_use,
+    op      => pl_exec_sp_op,     
+    use_sp  => pl_exec_sp_use,
     addr    => sp_dm_addr
 );
 
 dm: data_memory_1024B
 port map(
     clk             => clk,        
-    write_enable    => dec_dm_we,
-    z_addr          => dm_z_addr,
-    z_data_in       => rf_alu_data_a,
+    write_enable    => pl_exec_dataMem_we,
+    z_addr          => mux_dm_z_addr_out,
+    z_data_in       => pl_exec_data_a,
     data            => dm_mux_data_out
 );
 
 mem_mapped_io0: mem_mapped_io
 port map (
     clk         => clk,   
-    w_e         => dec_dm_we,
-    data        => rf_alu_data_a,
-    z_addr      => z_addr_out,
+    w_e         => pl_exec_dataMem_we,
+    data        => dm_mux_data_out,
+    z_addr      => mux_dm_z_addr_out,
     portb       => led(7 downto 0),
     portc       => led(15 downto 8),
     io_addr     => open,
@@ -359,33 +421,92 @@ port map(
     db      => dp
 );
 
+clk_wiz: clk_wiz_0
+port map (
+    clk,
+    cpu_reset,
+    open,
+    clk_in
+);
+
+ps0_fetch_dec: pipeline_register
+generic map(reg_width => 16)
+port map(
+    clk         => clk,
+    reset       => cpu_reset,
+    data_in     => pm_dec_instr,
+    data_out    => pl_fetch_dec_instr
+);
+
+
+
+--pipeline Decode -> Execute
+process(clk)
+begin
+    if(rising_edge(clk)) then
+        pl_exec_alu_op_code         <= dec_alu_op_code;
+        pl_exec_rf_we               <= dec_rf_we;
+        pl_exec_sreg_we             <= dec_sreg_we;
+        pl_exec_dataMem_we          <= dec_dm_we;
+        pl_exec_mux_alu_dm          <= dec_mux_alu_dm;
+        pl_exec_sreg_override       <= dec_sreg_override;
+        pl_exec_sreg_override_val   <= dec_sreg_override_val;
+        pl_exec_sp_op               <= dec_sp_op;
+        pl_exec_sp_use              <= dec_sp_use;
+        pl_exec_im_val              <= dec_im_val;
+        pl_exec_alu_im              <= dec_alu_im;
+        pl_exec_addr_a              <= dec_rf_addr_opA;
+        pl_exec_addr_b              <= dec_rf_addr_opB;
+        pl_exec_z_addr              <= z_addr_out;
+        pl_exec_data_a              <= dc_feedfwd_data_a_out;
+        pl_exec_data_b              <= dc_feedfwd_data_b_out;
+    end if;
+end process;
+
+--pipeline Execute -> Writeback
+process(clk)
+begin
+    if(rising_edge(clk)) then
+        pl_wb_rf_we         <= pl_exec_rf_we;
+        pl_wb_mux_alu_dm    <= pl_exec_mux_alu_dm;
+        pl_wb_addr_a        <= pl_exec_addr_a;
+        pl_wb_rf_we         <= pl_exec_rf_we;
+        pl_wb_dm_res        <= dm_mux_data_out;
+        pl_wb_alu_res       <= alu_mux_dm_output;
+    end if;
+end process;
+
 -- Reseting the CPU
 cpu_reset <= btnC AND btnD AND btnU;
 
--- z-addr logic: the src of the z_addr can be immdiate_values (LDI), Data memory Load (LD), MOV and the result of an ALU op
-z_data_src_bus  <= dec_rf_im & dec_mux_alu_dm;        -- need to figure out the source of the data
---z_addr_r31_we   <= '1' when ((dec_rf_addr_opA(4) AND dec_rf_addr_opA(3) AND dec_rf_addr_opA(2) AND dec_rf_addr_opA(1) AND dec_rf_addr_opA(0) = '1') AND dec_rf_we = '1') else '0';
-z_addr_r31_we   <= dec_rf_addr_opA(4) AND dec_rf_addr_opA(3) AND dec_rf_addr_opA(2) AND dec_rf_addr_opA(1) AND dec_rf_addr_opA(0) AND dec_rf_we;
---z_addr_r30_we   <= '1' when (dec_rf_addr_opA = "11110" AND dec_rf_we = '1') else '0';
-z_addr_r30_we   <= dec_rf_addr_opA(4) AND dec_rf_addr_opA(3) AND dec_rf_addr_opA(2) AND dec_rf_addr_opA(1) AND NOT dec_rf_addr_opA(0) AND dec_rf_we;
---z_data_in       <= dec_im_val when z_data_src_bus = "10" else
---                rf_alu_data_a when z_data_src_bus = "00" else
---                mux_alu_dm_data when z_data_src_bus = "01" else (others => '0');
-z_data_in       <= mux_wb_im_rf_data_in;
-dm_z_addr <= sp_dm_addr when dec_sp_use = '1' else z_addr_out;
+
+mux_dm_z_addr_out <= sp_dm_addr when pl_exec_sp_use = '1' else pl_exec_z_addr;
 
 
 --IO
 port_for_btns <= "000"&btnR&btnU&btnD&btnL&btnC;
 
 --MUXing the data going out of the writeback stage: mux the result of the Writeback between ALU result and DM Result
-mux_alu_dm_data <= alu_mux_dm_output when dec_mux_alu_dm = '0' else dm_mux_data_out;
+mux_wb_data <= pl_wb_alu_res when pl_exec_mux_alu_dm = '0' else pl_wb_dm_res;
 
 --MUXing the data going into the rf
-mux_wb_im_rf_data_in <= mux_alu_dm_data when dec_rf_im = '0' else dec_im_val;
+mux_wb_im_rf_data_in <= mux_wb_data when pl_exec_rf_im = '0' else pl_exec_im_val;
 
 --MUXing ALU's data_b between rf_data_b and decoder_immediate_Value
-mux_rf_dec_alu_data_b_in <= rf_alu_data_b when dec_alu_im = '0' else dec_im_val;
+mux_rf_dec_alu_data_b_in <= pl_exec_data_b when pl_exec_alu_im = '0' else pl_exec_im_val;
+
+
+--Execute Stage - ALU_In Feedfwd mechanic
+exec_feedfwd_data_a_condition   <= '1' when (pl_exec_addr_a = pl_wb_addr_a AND pl_exec_rf_we = '1') else '0';
+exec_feedfwd_data_b_condition   <= '1' when (pl_exec_addr_b = pl_wb_addr_a AND pl_exec_rf_we = '1') else '0';
+exec_feedfwd_data_a_out         <= pl_exec_data_a when exec_feedfwd_data_a_condition = '0' else mux_wb_data;
+exec_feedfwd_data_b_out         <= mux_rf_dec_alu_data_b_in when exec_feedfwd_data_b_condition = '0' else mux_wb_data;
+
+--Decode Stage - RegFile_Out Feedfwd Mechanic
+dc_feedfwd_data_a_condition   <= '1' when (dec_rf_addr_opA = pl_wb_addr_a AND dec_rf_we = '0') else '0';
+dc_feedfwd_data_b_condition   <= '1' when (dec_rf_addr_opB = pl_wb_addr_a) else '0';
+dc_feedfwd_data_a_out         <= rf_alu_data_a when dc_feedfwd_data_a_condition = '0' else mux_wb_data;
+dc_feedfwd_data_b_out         <= rf_alu_data_b when dc_feedfwd_data_b_condition = '0' else mux_wb_data;
 
 end behavioral;
 

@@ -39,7 +39,7 @@ entity program_counter is
 end program_counter;
 
 architecture Behavioral of program_counter is
-  signal PC_reg : std_logic_vector(8 downto 0) := (others => '0');
+  signal PC_reg : std_logic_vector(8 downto 0);
 begin
   count : process (clk)
   begin  -- process count

@@ -21,8 +21,6 @@ entity decoder is
         alu_dm_mux          : out std_logic;
         pc_force_override   : out std_logic;
         pc_override_offset  : out std_logic_vector(11 downto 0);
-        sreg_override       : out std_logic;
-        sreg_override_val   : out std_logic_vector(7 downto 0);
         sp_op               : out std_logic;        --stackpointer operation type (increment(1) or decrement(0))
         use_sp_addr         : out std_logic         --use the stackpointer
     );
@@ -53,8 +51,6 @@ begin
         alu_dm_mux <= '0';
         pc_override_offset <= (others => '0');
         tmp_alu_op_code <= (others => '0');
-        sreg_override <= '0';
-        sreg_override_val <= (others => '0');
         pc_force_override <= '0';
         sp_op <= '0';
         use_sp_addr <= '0';
@@ -78,17 +74,15 @@ begin
                 case Instr(15 downto 0) is
                     --SEC
                     when "1001010000001000" =>
-                        sreg_override <= '1';
-                        sreg_override_val <= "00000001";
+                        alu_op_code <= op_sec;
                         w_e_SREG <= "00000001";
-                        dbg_op_code <= op_sec;
+                        dbg_op_code <= op_sec_dbg;
 
                     --CLC
                     when "1001010010001000" =>
-                        sreg_override <= '1';
-                        sreg_override_val <= "00000000";
+                        alu_op_code <= op_clc;
                         w_e_SREG <= "00000001";
-                        dbg_op_code <= op_clc;
+                        dbg_op_code <= op_clc_dbg;
 
                     --RET    
                     when "1001010100001000" =>

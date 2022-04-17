@@ -6,9 +6,7 @@ entity sreg is
             reset           : in std_logic;
          w_e_sreg           : in std_logic_vector (7 downto 0);
          new_status_in      : in STD_LOGIC_VECTOR (7 downto 0);
-         curr_status_out    : out STD_LOGIC_VECTOR (7 downto 0) := (others => '0');   --init everything to 0
-         override           : in std_logic;
-         override_val       : in std_logic_vector (7 downto 0)
+         curr_status_out    : out STD_LOGIC_VECTOR (7 downto 0)
         );
 end sreg;
 
@@ -30,67 +28,35 @@ begin
     if(rising_edge(clk)) then
     
         if(w_e_sreg(7)='1') then
-            if(override = '1') then
-                interrupt <= override_val(7);
-            else
-                interrupt <= new_status_in(7);
-            end if;
+            interrupt <= new_status_in(7);
         end if;
         
         if(w_e_sreg(6)='1') then
-            if(override = '1') then
-                bit_copy_storage <= override_val(6);
-            else
-                bit_copy_storage <= new_status_in(6);
-            end if;
+            bit_copy_storage <= new_status_in(6);
         end if;
         
         if(w_e_sreg(5)='1') then
-            if(override = '1') then
-                half_carry <= override_val(5);
-            else
-                half_carry <= new_status_in(5);
-            end if;
+            half_carry <= new_status_in(5);
         end if;
         
         if(w_e_sreg(4)='1') then
-            if(override = '1') then
-                sign_bit <= override_val(4);
-            else
-                sign_bit <= new_status_in(4);
-            end if;
+            sign_bit <= new_status_in(4);
         end if;
         
         if(w_e_sreg(3)='1') then
-            if(override = '1') then
-                overflow <= override_val(3);
-            else
-                overflow <= new_status_in(3);
-            end if;
+            overflow <= new_status_in(3);
         end if;
         
         if(w_e_sreg(2)='1') then
-            if(override = '1') then
-                negative <= override_val(2);
-            else
-                negative <= new_status_in(2);
-            end if;
+            negative <= new_status_in(2);
         end if;
         
         if(w_e_sreg(1)='1') then
-            if(override = '1') then
-                zero <= override_val(1);
-            else
-                zero <= new_status_in(1);
-            end if;
+            zero <= new_status_in(1);
         end if;
         
         if(w_e_sreg(0)='1') then
-            if(override = '1') then
-                carry <= override_val(0);
-            else
-                carry <= new_status_in(0);
-            end if;
+            carry <= new_status_in(0);
         end if;
         
     end if;

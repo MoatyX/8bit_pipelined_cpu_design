@@ -58,25 +58,25 @@ begin
         
       when op_brbs =>
         erg <= status_in AND OPB;
-        branch_test_result <= (OPB(7) AND status_in(7)) or 
-                       (OPB(6) AND status_in(6)) or 
-                       (OPB(5) AND status_in(5)) or 
-                       (OPB(4) AND status_in(4)) or 
-                       (OPB(3) AND status_in(3)) or 
-                       (OPB(2) AND status_in(2)) or 
-                       (OPB(1) AND status_in(1)) or 
-                       (OPB(0) AND status_in(0));
+--        branch_test_result <= (OPB(7) AND status_in(7)) or 
+--                       (OPB(6) AND status_in(6)) or 
+--                       (OPB(5) AND status_in(5)) or 
+--                       (OPB(4) AND status_in(4)) or 
+--                       (OPB(3) AND status_in(3)) or 
+--                       (OPB(2) AND status_in(2)) or 
+--                       (OPB(1) AND status_in(1)) or 
+--                       (OPB(0) AND status_in(0));
         
       when op_brbc =>
         erg <= (not status_in) AND OPB;
-        branch_test_result <= (OPB(7) AND not status_in(7)) or 
-                       (OPB(6) AND not status_in(6)) or 
-                       (OPB(5) AND not status_in(5)) or 
-                       (OPB(4) AND not status_in(4)) or 
-                       (OPB(3) AND not status_in(3)) or 
-                       (OPB(2) AND not status_in(2)) or 
-                       (OPB(1) AND not status_in(1)) or 
-                       (OPB(0) AND not status_in(0));
+--        branch_test_result <= (OPB(7) AND not status_in(7)) or 
+--                       (OPB(6) AND not status_in(6)) or 
+--                       (OPB(5) AND not status_in(5)) or 
+--                       (OPB(4) AND not status_in(4)) or 
+--                       (OPB(3) AND not status_in(3)) or 
+--                       (OPB(2) AND not status_in(2)) or 
+--                       (OPB(1) AND not status_in(1)) or 
+--                       (OPB(0) AND not status_in(0));
       
       
       when op_com =>
@@ -150,6 +150,12 @@ begin
       when op_lsr =>
         v <= '0' xor OPA(0);
         c <= OPA(0);
+        
+      when op_sec =>
+        c <= '1';
+
+      when op_clc =>
+        c <= '0';
       
       when others => null;
     end case;

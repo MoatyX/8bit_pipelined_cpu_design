@@ -13,17 +13,17 @@ use IEEE.NUMERIC_STD.ALL;
 -- Define Addresses of Registers mapped to IO
 package pkg_io is
 
-constant pinc_addr          : integer := 51;
-constant pinb_addr          : integer := 54;
-constant pind_addr          : integer := 48;
+constant pinc_addr          : integer := 16#33#;
+constant pinb_addr          : integer := 16#36#;
+constant pind_addr          : integer := 16#30#;
 
-constant portc_addr         : integer := 53;        --LED[15:8]
-constant portb_addr         : integer := 56;        --LED[7:0]
+constant portc_addr         : integer := 16#35#;        --LED[15:8]
+constant portb_addr         : integer := 16#38#;        --LED[7:0]
 
-constant ser_addr           : integer := 64;
-constant seg0_n_addr        : integer := 65;
-constant seg1_n_addr        : integer := 66;
-constant seg2_n_addr        : integer := 67;
-constant seg3_n_addr        : integer := 68;
+constant ser_addr           : integer := 16#40#;
+constant seg0_n_addr        : integer := 16#41#;
+constant seg1_n_addr        : integer := 16#42#;
+constant seg2_n_addr        : integer := 16#43#;
+constant seg3_n_addr        : integer := 16#44#;
 
 end package;

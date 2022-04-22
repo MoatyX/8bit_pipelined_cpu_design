@@ -34,7 +34,7 @@ architecture behaviour of toplevel_tb is
 
   component toplevel
     port (
-        clk              : in  STD_LOGIC;
+        clk_in              : in  STD_LOGIC;
         led                 : out std_logic_vector(15 downto 0) := (others => '1');
         sw                  : in std_logic_vector(15 downto 0);
         seg                 : out std_logic_vector(6 downto 0) := (others => '1');
@@ -66,7 +66,7 @@ begin  -- behaviour
   DUT: toplevel
     port map (
       btnC              => reset,
-      clk               => clk,
+      clk_in            => clk,
       led               => open,
       sw                => sw,
       seg               => open,

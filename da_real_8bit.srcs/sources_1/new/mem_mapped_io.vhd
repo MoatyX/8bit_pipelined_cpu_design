@@ -34,6 +34,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity mem_mapped_io is
     Port ( clk      : in STD_LOGIC;
+           reset    : in std_logic;
            w_e      : in STD_LOGIC;
            data     : in std_logic_vector(7 downto 0);
            z_addr   : in STD_LOGIC_VECTOR (9 downto 0);
@@ -80,12 +81,18 @@ end process;
 save_mem: process(clk) is
 begin
     if(rising_edge(clk)) then
-        case to_integer(unsigned(z_addr)) is
-            when pinb_addr => pinb <= pinb_in;
-            when pinc_addr => pinc <= pinc_in;
-            when pind_addr => pind <= pind_in;
-            when others => null;
-        end case;
+        if(reset = '1') then
+            pinb <= (others => '0');
+            pinc <= (others => '0');
+            pind <= (others => '0');            
+        else
+            case to_integer(unsigned(z_addr)) is
+                when pinb_addr => pinb <= pinb_in;
+                when pinc_addr => pinc <= pinc_in;
+                when pind_addr => pind <= pind_in;
+                when others => null;
+            end case;
+        end if;
     end if;
 end process;
 

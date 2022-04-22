@@ -248,6 +248,7 @@ end component;
 
 component mem_mapped_io
     Port (   clk        : in STD_LOGIC;
+             reset      : in std_logic;
              w_e        : in STD_LOGIC;
              data       : in std_logic_vector(7 downto 0);
              z_addr     : in STD_LOGIC_VECTOR (9 downto 0);
@@ -389,7 +390,8 @@ port map(
 
 mem_mapped_io0: mem_mapped_io
 port map (
-    clk         => clk,   
+    clk         => clk,
+    reset       => cpu_reset,   
     w_e         => pl_dm_dm_we,
     data        => dm_data_out,
     z_addr      => mux_z_addr_src,

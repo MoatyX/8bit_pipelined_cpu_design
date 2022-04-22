@@ -60,21 +60,20 @@ signal rf_alu_data_a            : std_logic_vector(7 downto 0);
 signal rf_alu_data_b            : std_logic_vector(7 downto 0);
 
 --ALU
-signal alu_mux_dm_output        : std_logic_vector(7 downto 0);
+signal alu_data_output          : std_logic_vector(7 downto 0);
 signal alu_sreg_new_sreg        : std_logic_vector(7 downto 0);
 
 --SREG
 signal sreg_alu_curr_status     : std_logic_vector(7 downto 0);
 
 --Z-Address
-signal mux_dm_z_addr_out            : std_logic_vector(9 downto 0);
 signal z_addr_out                   : std_logic_vector (9 downto 0);
 
 --Stackpointer
 signal sp_dm_addr                   : std_logic_vector(9 downto 0);
 
 --Data Memory 1024
-signal dm_mux_data_out                  : std_logic_vector(7 downto 0);
+signal dm_data_out                  : std_logic_vector(7 downto 0);
 
 --Memeory Mapped Input/Output
 signal io_ser           :std_logic_vector(7 downto 0);
@@ -85,44 +84,66 @@ signal io_seg3          :std_logic_vector(7 downto 0);
 signal port_for_btns    : std_logic_vector(7 downto 0);
 
 --MUXing
-signal mux_wb_data          : std_logic_vector(7 downto 0);
-signal mux_wb_im_rf_data_in     : std_logic_vector(7 downto 0);
-signal mux_rf_dec_alu_data_b_in : std_logic_vector(7 downto 0);
+signal mux_alu_data_b               : std_logic_vector(7 downto 0);
+signal mux_exec_data_out            : std_logic_vector(7 downto 0);
+signal mux_z_addr_src               : std_logic_vector(9 downto 0);
+signal mux_dm_data_out              : std_logic_vector(7 downto 0);
+
 
 ----------------------Pipelining Signals--------------------------------------------------------
---Fetch <---> Decode
-signal pl_fetch_dec_instr       : std_logic_vector(15 downto 0);
 
---Decode <-----> Execute
-signal pl_exec_alu_op_code              : std_logic_vector(3 downto 0);
+--Decode <-----> RegFile
+signal pl_rf_alu_op_code              : std_logic_vector(3 downto 0);
+signal pl_rf_rf_we                    : std_logic;
+signal pl_rf_sreg_we                  : std_logic_vector(7 downto 0);
+signal pl_rf_rf_im                    : std_logic;
+signal pl_rf_alu_im                   : std_logic;
+signal pl_rf_im_val                   : std_logic_vector(7 downto 0);
+signal pl_rf_dataMem_we               : std_logic;
+signal pl_rf_mux_alu_dm               : std_logic;
+signal pl_rf_sp_op                    : std_logic;
+signal pl_rf_sp_use                   : std_logic;
+signal pl_rf_addr_a                   : std_logic_vector(4 downto 0);
+signal pl_rf_addr_b                   : std_logic_vector(4 downto 0);
+
+--RegFile <-----> Execute
+signal pl_exec_addr_a                   : std_logic_vector(4 downto 0);
+signal pl_exec_addr_b                   : std_logic_vector(4 downto 0);
+signal pl_exec_data_a                   : std_logic_vector(7 downto 0);
+signal pl_exec_data_b                   : std_logic_vector(7 downto 0);
+signal pl_exec_alu_op                   : std_logic_vector(3 downto 0);
 signal pl_exec_rf_we                    : std_logic;
 signal pl_exec_sreg_we                  : std_logic_vector(7 downto 0);
 signal pl_exec_rf_im                    : std_logic;
 signal pl_exec_alu_im                   : std_logic;
 signal pl_exec_im_val                   : std_logic_vector(7 downto 0);
-signal pl_exec_dataMem_we               : std_logic;
+signal pl_exec_dm_we                    : std_logic;
 signal pl_exec_mux_alu_dm               : std_logic;
 signal pl_exec_sp_op                    : std_logic;
 signal pl_exec_sp_use                   : std_logic;
-signal pl_exec_addr_a                   : std_logic_vector(4 downto 0);
-signal pl_exec_addr_b                   : std_logic_vector(4 downto 0);
 signal pl_exec_z_addr                   : std_logic_vector(9 downto 0);
-signal pl_exec_data_a                   : std_logic_vector(7 downto 0);
-signal pl_exec_data_b                   : std_logic_vector(7 downto 0);
+
+--Execute <--------> DataMemory
+signal pl_dm_exec_data                  : std_logic_vector(7 downto 0);
+signal pl_dm_addr_a                     : std_logic_vector(4 downto 0);
+signal pl_dm_rf_we                      : std_logic;
+signal pl_dm_dm_we                      : std_logic;
+signal pl_dm_mux_alu_dm                 : std_logic;
+signal pl_dm_sp_op                      : std_logic;
+signal pl_dm_sp_use                     : std_logic;
+signal pl_dm_z_addr                     : std_logic_vector(9 downto 0); 
 
 --Execute <-----> Writeback
 signal pl_wb_addr_a                     : std_logic_vector(4 downto 0);
 signal pl_wb_rf_we                      : std_logic;
-signal pl_wb_mux_alu_dm                 : std_logic;
-signal pl_wb_alu_res                    : std_logic_vector(7 downto 0);
-signal pl_wb_dm_res                     : std_logic_vector(7 downto 0);
+signal pl_wb_data                       : std_logic_vector(7 downto 0);
 
 
 --Executre Feedforwarding mechanic
-signal dc_feedfwd_data_a_condition      : std_logic := '0';
-signal dc_feedfwd_data_b_condition      : std_logic := '0';
-signal dc_feedfwd_data_a_out            : std_logic_vector(7 downto 0);
-signal dc_feedfwd_data_b_out            : std_logic_vector(7 downto 0);
+signal rf_feedfwd_data_a_condition      : std_logic := '0';
+signal rf_feedfwd_data_b_condition      : std_logic := '0';
+signal rf_feedfwd_data_a_out            : std_logic_vector(7 downto 0);
+signal rf_feedfwd_data_b_out            : std_logic_vector(7 downto 0);
 signal exec_feedfwd_data_a_condition    : std_logic := '0';
 signal exec_feedfwd_data_b_condition    : std_logic := '0';
 signal exec_feedfwd_data_a_out          : std_logic_vector(7 downto 0);
@@ -268,16 +289,6 @@ component clk_wiz_0
     );
 end component;
 
-component pipeline_register is
-        generic(reg_width: integer);
-        port(
-            clk: in std_logic;
-            reset: in std_logic;
-            data_in: in std_logic_vector(reg_width-1 downto 0);
-            data_out: out std_logic_vector(reg_width-1 downto 0)
-        );
-end component;
-
 begin
 
 pc: program_counter
@@ -297,7 +308,7 @@ port map(
 
 dec: decoder
 port map (
-    Instr               => pl_fetch_dec_instr,
+    Instr               => pm_dec_instr,
     addr_opa            => dec_rf_addr_opA,
     addr_opb            => dec_rf_addr_opB,
     alu_op_code         => dec_alu_op_code,
@@ -318,21 +329,21 @@ port map (
 rf: register_file
 port map(
     clk         => clk,
-    addr_opa    => dec_rf_addr_opA,
-    addr_opb    => dec_rf_addr_opB,
+    addr_opa    => pl_rf_addr_a,
+    addr_opb    => pl_rf_addr_b,
     write_addr  => pl_wb_addr_a,
     w_e_regfile => pl_wb_rf_we,
     data_opa    => rf_alu_data_a,
     data_opb    => rf_alu_data_b,
-    data_in     => mux_wb_im_rf_data_in
+    data_in     => pl_wb_data
 );
 
 alu0: ALU
 port map(
-    OPCODE              => pl_exec_alu_op_code,
+    OPCODE              => pl_exec_alu_op,
     OPA                 => exec_feedfwd_data_a_out,
-    OPB                 => exec_feedfwd_data_b_out,
-    RES                 => alu_mux_dm_output,
+    OPB                 => mux_alu_data_b,
+    RES                 => alu_data_output,
     new_status          => alu_sreg_new_sreg,
     status_in           => sreg_alu_curr_status,
     branch_test_result  => open
@@ -352,9 +363,9 @@ z_addr0: z_addr
 port map (
     clk                     => clk,       
     reset                   => cpu_reset,
-    addr_a                  => pl_exec_addr_a,
-    rf_write_enable_status  => pl_exec_rf_we,
-    data_in                 => mux_wb_im_rf_data_in,
+    addr_a                  => pl_wb_addr_a,
+    rf_write_enable_status  => pl_wb_rf_we,
+    data_in                 => pl_wb_data,
     z_addr_out              => z_addr_out
 );
 
@@ -362,26 +373,26 @@ sp: stackpointer
 port map(
     clk     => clk,
     reset   => cpu_reset,
-    op      => pl_exec_sp_op,     
-    use_sp  => pl_exec_sp_use,
+    op      => pl_dm_sp_op,     
+    use_sp  => pl_dm_sp_use,
     addr    => sp_dm_addr
 );
 
 dm: data_memory_1024B
 port map(
     clk             => clk,        
-    write_enable    => pl_exec_dataMem_we,
-    z_addr          => mux_dm_z_addr_out,
-    z_data_in       => pl_exec_data_a,
-    data            => dm_mux_data_out
+    write_enable    => pl_dm_dm_we,
+    z_addr          => mux_z_addr_src,
+    z_data_in       => pl_dm_exec_data,
+    data            => dm_data_out
 );
 
 mem_mapped_io0: mem_mapped_io
 port map (
     clk         => clk,   
-    w_e         => pl_exec_dataMem_we,
-    data        => dm_mux_data_out,
-    z_addr      => mux_dm_z_addr_out,
+    w_e         => pl_dm_dm_we,
+    data        => dm_data_out,
+    z_addr      => mux_z_addr_src,
     portb       => led(7 downto 0),
     portc       => led(15 downto 8),
     io_addr     => open,
@@ -417,81 +428,152 @@ port map (
     clk_in
 );
 
-ps0_fetch_dec: pipeline_register
-generic map(reg_width => 16)
-port map(
-    clk         => clk,
-    reset       => cpu_reset,
-    data_in     => pm_dec_instr,
-    data_out    => pl_fetch_dec_instr
-);
 
 
-
---pipeline Decode -> Execute
+--pipeline Fetch -> RegRead
 process(clk)
 begin
     if(rising_edge(clk)) then
-        pl_exec_alu_op_code         <= dec_alu_op_code;
-        pl_exec_rf_we               <= dec_rf_we;
-        pl_exec_sreg_we             <= dec_sreg_we;
-        pl_exec_dataMem_we          <= dec_dm_we;
-        pl_exec_mux_alu_dm          <= dec_mux_alu_dm;
-        pl_exec_sp_op               <= dec_sp_op;
-        pl_exec_sp_use              <= dec_sp_use;
-        pl_exec_im_val              <= dec_im_val;
-        pl_exec_alu_im              <= dec_alu_im;
-        pl_exec_addr_a              <= dec_rf_addr_opA;
-        pl_exec_addr_b              <= dec_rf_addr_opB;
-        pl_exec_z_addr              <= z_addr_out;
-        pl_exec_data_a              <= dc_feedfwd_data_a_out;
-        pl_exec_data_b              <= dc_feedfwd_data_b_out;
+        if(cpu_reset = '1') then
+            pl_rf_alu_op_code         <= (others => '0');
+            pl_rf_rf_we               <= '0';      
+            pl_rf_sreg_we             <= (others => '0');   
+            pl_rf_dataMem_we          <= '0';
+            pl_rf_mux_alu_dm          <= '0'; 
+            pl_rf_sp_op               <= '0';      
+            pl_rf_sp_use              <= '0';     
+            pl_rf_im_val              <= (others => '0');    
+            pl_rf_alu_im              <= '0';     
+            pl_rf_addr_a              <= (others => '0');
+            pl_rf_addr_b              <= (others => '0');
+        else
+            pl_rf_alu_op_code         <= dec_alu_op_code;
+            pl_rf_rf_we               <= dec_rf_we;      
+            pl_rf_sreg_we             <= dec_sreg_we;    
+            pl_rf_dataMem_we          <= dec_dm_we;      
+            pl_rf_mux_alu_dm          <= dec_mux_alu_dm; 
+            pl_rf_sp_op               <= dec_sp_op;      
+            pl_rf_sp_use              <= dec_sp_use;     
+            pl_rf_im_val              <= dec_im_val;     
+            pl_rf_alu_im              <= dec_alu_im;     
+            pl_rf_addr_a              <= dec_rf_addr_opA;
+            pl_rf_addr_b              <= dec_rf_addr_opB;
+        end if;
     end if;
 end process;
 
---pipeline Execute -> Writeback
+--Pipeline RegFile --> Execute
 process(clk)
 begin
     if(rising_edge(clk)) then
-        pl_wb_rf_we         <= pl_exec_rf_we;
-        pl_wb_mux_alu_dm    <= pl_exec_mux_alu_dm;
-        pl_wb_addr_a        <= pl_exec_addr_a;
-        pl_wb_dm_res        <= dm_mux_data_out;
-        pl_wb_alu_res       <= alu_mux_dm_output;
+        if(cpu_reset = '1') then
+            pl_exec_addr_a          <= (others => '0');  
+            pl_exec_addr_b          <= (others => '0');
+            pl_exec_data_a          <= (others => '0');
+            pl_exec_data_b          <= (others => '0');
+            pl_exec_alu_op          <= (others => '0');
+            pl_exec_rf_we           <= '0';
+            pl_exec_sreg_we         <= (others => '0');
+            pl_exec_rf_im           <= '0';
+            pl_exec_alu_im          <= '0';
+            pl_exec_im_val          <= (others => '0');
+            pl_exec_dm_we           <= '0';
+            pl_exec_mux_alu_dm      <= '0';
+            pl_exec_sp_op           <= '0';
+            pl_exec_sp_use          <= '0';
+            pl_exec_z_addr          <= (others => '0');
+        else
+            pl_exec_addr_a          <= pl_rf_addr_a; 
+            pl_exec_addr_b          <= pl_rf_addr_b;
+            pl_exec_data_a          <= rf_feedfwd_data_a_out;
+            pl_exec_data_b          <= rf_feedfwd_data_b_out;
+            pl_exec_alu_op          <= pl_rf_alu_op_code;
+            pl_exec_rf_we           <= pl_rf_rf_we;
+            pl_exec_sreg_we         <= pl_rf_sreg_we;
+            pl_exec_rf_im           <= pl_rf_rf_im;
+            pl_exec_alu_im          <= pl_rf_alu_im;
+            pl_exec_im_val          <= pl_rf_im_val;
+            pl_exec_dm_we           <= pl_rf_dataMem_we;
+            pl_exec_mux_alu_dm      <= pl_rf_mux_alu_dm;
+            pl_exec_sp_op           <= pl_rf_sp_op;
+            pl_exec_sp_use          <= pl_rf_sp_use;
+            pl_exec_z_addr          <= z_addr_out;
+        end if;
+    end if;
+end process;
+
+
+--Pipeline Execute --> Data Memory
+process(clk)
+begin
+    if(rising_edge(clk)) then
+        if(cpu_reset = '1') then
+            pl_dm_exec_data     <= (others => '0');
+            pl_dm_addr_a        <= (others => '0');
+            pl_dm_rf_we         <= '0'; 
+            pl_dm_dm_we         <= '0';
+            pl_dm_mux_alu_dm    <= '0';
+            pl_dm_sp_op         <= '0';
+            pl_dm_sp_use        <= '0';
+            pl_dm_z_addr        <= (others => '0');
+        else
+            pl_dm_exec_data     <= mux_exec_data_out;
+            pl_dm_addr_a        <= pl_exec_addr_a;
+            pl_dm_rf_we         <= pl_exec_rf_we;
+            pl_dm_dm_we         <= pl_exec_dm_we;
+            pl_dm_mux_alu_dm    <= pl_exec_mux_alu_dm;
+            pl_dm_sp_op         <= pl_exec_sp_op;
+            pl_dm_sp_use        <= pl_exec_sp_use;
+            pl_dm_z_addr        <= pl_exec_z_addr;
+        end if;
+    end if;
+end process;
+
+process(clk)
+begin
+    if(rising_edge(clk)) then
+        if(cpu_reset = '1') then
+            pl_wb_addr_a    <= (others => '0');
+            pl_wb_data      <= (others => '0');
+            pl_wb_rf_we     <= '0';
+        else
+            pl_wb_addr_a    <= pl_dm_addr_a;
+            pl_wb_data      <= mux_dm_data_out;
+            pl_wb_rf_we     <= pl_dm_rf_we;            
+        end if;
     end if;
 end process;
 
 -- Reseting the CPU
 cpu_reset <= btnC AND btnD AND btnU;
 
-
-mux_dm_z_addr_out <= sp_dm_addr when pl_exec_sp_use = '1' else pl_exec_z_addr;
-
-
 --IO
 port_for_btns <= "000"&btnR&btnU&btnD&btnL&btnC;
 
---MUXing the data going out of the writeback stage: mux the result of the Writeback between ALU result and DM Result
-mux_wb_data <= pl_wb_alu_res when pl_exec_mux_alu_dm = '0' else pl_wb_dm_res;
+----MUXing ALU's data_b between the incoming data_b and decoder_immediate_Value (important for CPI, ANDI...etc)
+mux_alu_data_b <= rf_feedfwd_data_a_out when pl_exec_alu_im = '0' else pl_exec_im_val;
 
---MUXing the data going into the rf
-mux_wb_im_rf_data_in <= mux_wb_data when pl_exec_rf_im = '0' else pl_exec_im_val;
+--MUX the final data output of the execute stage
+mux_exec_data_out <= alu_data_output when pl_exec_rf_im = '0' else pl_exec_im_val;
 
---MUXing ALU's data_b between rf_data_b and decoder_immediate_Value
-mux_rf_dec_alu_data_b_in <= pl_exec_data_b when pl_exec_alu_im = '0' else pl_exec_im_val;
+--MUX the source of the z_addr
+mux_z_addr_src  <= pl_dm_z_addr when pl_dm_sp_use = '1' else sp_dm_addr;
+
+--The data coming out the DataMemory stage, is either the result of the Execute stage or the result of the DataMemory stage
+mux_dm_data_out <= pl_dm_exec_data when pl_dm_mux_alu_dm = '0' else dm_data_out;
 
 
 --Execute Stage - ALU_In Feedfwd mechanic
-exec_feedfwd_data_a_condition   <= '1' when (pl_exec_addr_a = pl_wb_addr_a AND pl_exec_rf_we = '1') else '0';
-exec_feedfwd_data_b_condition   <= '1' when (pl_exec_addr_b = pl_wb_addr_a AND pl_exec_rf_we = '1') else '0';
-exec_feedfwd_data_a_out         <= pl_exec_data_a when exec_feedfwd_data_a_condition = '0' else mux_wb_data;
-exec_feedfwd_data_b_out         <= mux_rf_dec_alu_data_b_in when exec_feedfwd_data_b_condition = '0' else mux_wb_data;
+exec_feedfwd_data_a_condition   <= '1' when (pl_exec_addr_a = pl_wb_addr_a AND pl_wb_rf_we = '1') else '0';
+exec_feedfwd_data_b_condition   <= '1' when (pl_exec_addr_b = pl_wb_addr_a AND pl_wb_rf_we = '1') else '0';
+exec_feedfwd_data_a_out         <= pl_exec_data_a when exec_feedfwd_data_a_condition = '0' else pl_wb_data;
+exec_feedfwd_data_b_out         <= pl_exec_data_b when exec_feedfwd_data_b_condition = '0' else pl_wb_data;
 
 --Decode Stage - RegFile_Out Feedfwd Mechanic
-dc_feedfwd_data_a_condition   <= '1' when (dec_rf_addr_opA = pl_wb_addr_a AND dec_rf_we = '0') else '0';
-dc_feedfwd_data_b_condition   <= '1' when (dec_rf_addr_opB = pl_wb_addr_a) else '0';
-dc_feedfwd_data_a_out         <= rf_alu_data_a when dc_feedfwd_data_a_condition = '0' else mux_wb_data;
-dc_feedfwd_data_b_out         <= rf_alu_data_b when dc_feedfwd_data_b_condition = '0' else mux_wb_data;
+rf_feedfwd_data_a_condition   <= '1' when (pl_rf_addr_a = pl_wb_addr_a AND pl_wb_rf_we = '1') else '0';
+rf_feedfwd_data_b_condition   <= '1' when (pl_rf_addr_b = pl_wb_addr_a AND pl_wb_rf_we = '1') else '0';
+rf_feedfwd_data_a_out         <= rf_alu_data_a when rf_feedfwd_data_a_condition = '0' else pl_wb_data;
+rf_feedfwd_data_b_out         <= rf_alu_data_b when rf_feedfwd_data_b_condition = '0' else pl_wb_data;
 
 end behavioral;
 

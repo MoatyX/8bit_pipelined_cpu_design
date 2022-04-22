@@ -63,14 +63,14 @@ mux_ports: process(clk) is
 begin
     if(rising_edge(clk)) then
         if(w_e='1') then
-            case z_addr is
-                when std_logic_vector(to_unsigned(portb_addr, 10))  => portb <= pinb;
-                when std_logic_vector(to_unsigned(portc_addr, 10))  => portc <= pinc;
-                when std_logic_vector(to_unsigned(ser_addr, 10))    => ser <= data;
-                when std_logic_vector(to_unsigned(seg0_n_addr, 10)) => seg0 <= data;
-                when std_logic_vector(to_unsigned(seg1_n_addr, 10)) => seg1 <= data;
-                when std_logic_vector(to_unsigned(seg2_n_addr, 10)) => seg2 <= data;
-                when std_logic_vector(to_unsigned(seg3_n_addr, 10)) => seg3 <= data;
+            case to_integer(unsigned(z_addr)) is
+                when portb_addr  => portb <= pinb;
+                when portc_addr  => portc <= pinc;
+                when ser_addr    => ser <= data;
+                when seg0_n_addr => seg0 <= data;
+                when seg1_n_addr => seg1 <= data;
+                when seg2_n_addr => seg2 <= data;
+                when seg3_n_addr => seg3 <= data;
                 when others => null;
             end case;
         end if;
@@ -80,10 +80,10 @@ end process;
 save_mem: process(clk) is
 begin
     if(rising_edge(clk)) then
-        case z_addr is
-            when std_logic_vector(to_unsigned(pinb_addr, 10)) => pinb <= pinb_in;
-            when std_logic_vector(to_unsigned(pinc_addr, 10)) => pinc <= pinc_in;
-            when std_logic_vector(to_unsigned(pind_addr, 10)) => pind <= pind_in;
+        case to_integer(unsigned(z_addr)) is
+            when pinb_addr => pinb <= pinb_in;
+            when pinc_addr => pinc <= pinc_in;
+            when pind_addr => pind <= pind_in;
             when others => null;
         end case;
     end if;

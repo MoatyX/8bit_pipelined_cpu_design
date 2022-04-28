@@ -47,8 +47,8 @@ architecture Behavioral of z_addr is
     signal rf_addr_r30            : STD_LOGIC;
     signal rf_addr_r31            : STD_LOGIC;
 begin
-    rf_addr_r30   <= addr_a(4) AND addr_a(3) AND addr_a(2) AND addr_a(1) AND addr_a(0) AND rf_write_enable_status;
-    rf_addr_r31   <= addr_a(4) AND addr_a(3) AND addr_a(2) AND addr_a(1) AND NOT addr_a(0) AND rf_write_enable_status;
+    rf_addr_r30   <= addr_a(4) AND addr_a(3) AND addr_a(2) AND addr_a(1) AND NOT addr_a(0) AND rf_write_enable_status;
+    rf_addr_r31   <= addr_a(4) AND addr_a(3) AND addr_a(2) AND addr_a(1) AND addr_a(0) AND rf_write_enable_status;
     main: process(clk)
     begin
 

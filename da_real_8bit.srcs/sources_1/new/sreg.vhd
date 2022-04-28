@@ -26,37 +26,47 @@ begin
 status_write: process(clk) is
 begin
     if(rising_edge(clk)) then
-    
-        if(w_e_sreg(7)='1') then
-            interrupt <= new_status_in(7);
-        end if;
-        
-        if(w_e_sreg(6)='1') then
-            bit_copy_storage <= new_status_in(6);
-        end if;
-        
-        if(w_e_sreg(5)='1') then
-            half_carry <= new_status_in(5);
-        end if;
-        
-        if(w_e_sreg(4)='1') then
-            sign_bit <= new_status_in(4);
-        end if;
-        
-        if(w_e_sreg(3)='1') then
-            overflow <= new_status_in(3);
-        end if;
-        
-        if(w_e_sreg(2)='1') then
-            negative <= new_status_in(2);
-        end if;
-        
-        if(w_e_sreg(1)='1') then
-            zero <= new_status_in(1);
-        end if;
-        
-        if(w_e_sreg(0)='1') then
-            carry <= new_status_in(0);
+        if(reset = '1') then
+            interrupt           <= '0';
+            bit_copy_storage    <= '0';
+            half_carry          <= '0';
+            sign_bit            <= '0';
+            overflow            <= '0';
+            negative            <= '0';
+            zero                <= '0';
+            carry               <= '0';
+        else
+            if(w_e_sreg(7)='1') then
+                interrupt <= new_status_in(7);
+            end if;
+            
+            if(w_e_sreg(6)='1') then
+                bit_copy_storage <= new_status_in(6);
+            end if;
+            
+            if(w_e_sreg(5)='1') then
+                half_carry <= new_status_in(5);
+            end if;
+            
+            if(w_e_sreg(4)='1') then
+                sign_bit <= new_status_in(4);
+            end if;
+            
+            if(w_e_sreg(3)='1') then
+                overflow <= new_status_in(3);
+            end if;
+            
+            if(w_e_sreg(2)='1') then
+                negative <= new_status_in(2);
+            end if;
+            
+            if(w_e_sreg(1)='1') then
+                zero <= new_status_in(1);
+            end if;
+            
+            if(w_e_sreg(0)='1') then
+                carry <= new_status_in(0);
+            end if;
         end if;
         
     end if;

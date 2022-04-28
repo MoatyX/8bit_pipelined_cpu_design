@@ -41,7 +41,6 @@ end stackpointer;
 
 architecture Behavioral of stackpointer is
     signal curr, last : STD_LOGIC_VECTOR (9 downto 0) := (others => '1');
-    signal call_curr, call_last : STD_LOGIC_VECTOR (9 downto 0) := (others => '0');
 begin
 
 calculate: process(clk) is
@@ -51,22 +50,19 @@ begin
         if(reset = '1') then
             curr <= (others => '1');
             last <= (others => '1');
-            call_curr <= (others => '0');
-            call_last <= (others => '0');
         else
-            case op is
-                when '1' =>
-                    last <= curr; 
-                    call_last <= call_curr;
-                    curr <= std_logic_vector(unsigned(last) - 1);
-                    call_curr <= std_logic_vector(unsigned(call_last) - 1);
-                when '0' =>
-                    last <= curr; 
-                    call_last <= call_curr;
-                    curr <= std_logic_vector(unsigned(last) + 1);
-                    call_curr <= std_logic_vector(unsigned(call_last) + 1);
-                when others => null;
-            end case;
+            if(use_sp = '1') then
+                case op is
+                    when '1' =>
+                        last <= curr; 
+                        curr <= std_logic_vector(unsigned(last) - 1);
+                    when '0' =>
+                        last <= curr; 
+                        curr <= std_logic_vector(unsigned(last) + 1);
+                    when others => null;
+                end case;
+            end if;
+            
         end if;
         
     end if;
@@ -74,6 +70,6 @@ begin
 end process;
 
 
-addr <= call_curr when use_sp = '1' else curr;
+addr <= curr;
 
 end Behavioral;

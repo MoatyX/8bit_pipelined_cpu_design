@@ -68,8 +68,8 @@ begin
         seg1    <= (others => '0');
         seg2    <= (others => '0');
         seg3    <= (others => '0');
-        portb   <= (others => '0');
-        portc   <= (others => '0');
+--        portb   <= (others => '0');
+--        portc   <= (others => '0');
         if(w_e='1') then
             case to_integer(unsigned(z_addr)) is
                 when portb_addr  => portb <= pinb;

@@ -136,6 +136,10 @@ signal exec_feedfwd_data_a_condition    : std_logic := '0';
 signal exec_feedfwd_data_b_condition    : std_logic := '0';
 signal exec_feedfwd_data_a_out          : std_logic_vector(7 downto 0);
 signal exec_feedfwd_data_b_out          : std_logic_vector(7 downto 0);
+signal pre_exec_feedfwd_data_a_condition: std_logic; 
+signal pre_exec_feedfwd_data_b_condition: std_logic;
+signal pre_exec_feedfwd_data_a_condition2: std_logic; 
+signal pre_exec_feedfwd_data_b_condition2: std_logic;
 
 --signal tmp,tmp2                              : std_logic_vector(7 downto 0);
 --------------------------------------------------------------------------------
@@ -432,14 +436,14 @@ port map(
     db      => dp
 );
 
---clk <= clk_in;
-clk_wiz: clk_wiz_0
-port map (
-    clk,
-    cpu_reset,
-    open,
-    clk_in
-);
+clk <= clk_in;
+--clk_wiz: clk_wiz_0
+--port map (
+--    clk,
+--    cpu_reset,
+--    open,
+--    clk_in
+--);
 
 
 --pipeline Fetch -> RegRead
@@ -459,6 +463,8 @@ begin
             pl_rf_addr_a                <= (others => '0');
             pl_rf_addr_b                <= (others => '0');
             pl_rf_rf_im                 <= '0';
+            pre_exec_feedfwd_data_a_condition                        <= '0';
+            pre_exec_feedfwd_data_b_condition                        <= '0';
         else
             pl_rf_alu_op_code           <= dec_alu_op_code;
             pl_rf_rf_we                 <= dec_rf_we;      
@@ -472,6 +478,8 @@ begin
             pl_rf_addr_a                <= dec_rf_addr_opA;
             pl_rf_addr_b                <= dec_rf_addr_opB;
             pl_rf_rf_im                 <= dec_rf_im;
+            pre_exec_feedfwd_data_a_condition                        <= exec_feedfwd_data_a_condition;
+            pre_exec_feedfwd_data_b_condition                        <= exec_feedfwd_data_b_condition;
         end if;
     end if;
 end process;
@@ -495,6 +503,8 @@ begin
             pl_exec_mux_alu_dm      <= '0';
             pl_exec_sp_op           <= '0';
             pl_exec_sp_use          <= '0';
+            pre_exec_feedfwd_data_a_condition2                        <= '0';
+            pre_exec_feedfwd_data_b_condition2                        <= '0';
         else
             pl_exec_addr_a          <= pl_rf_addr_a; 
             pl_exec_addr_b          <= pl_rf_addr_b;
@@ -510,6 +520,8 @@ begin
             pl_exec_mux_alu_dm      <= pl_rf_mux_alu_dm;
             pl_exec_sp_op           <= pl_rf_sp_op;
             pl_exec_sp_use          <= pl_rf_sp_use;
+            pre_exec_feedfwd_data_a_condition2                        <= pre_exec_feedfwd_data_a_condition;
+            pre_exec_feedfwd_data_b_condition2                        <= pre_exec_feedfwd_data_b_condition;
         end if;
     end if;
 end process;
@@ -553,10 +565,10 @@ mux_wb_data <= pl_wb_alu_data when pl_wb_mux_alu_dm = '0' else pl_wb_dm_data;
 
 
 --Execute Stage - ALU_In Feedfwd mechanic
-exec_feedfwd_data_a_condition   <= '1' when (pl_exec_addr_a = pl_wb_addr_a AND pl_wb_rf_we = '1') else '0';
-exec_feedfwd_data_b_condition   <= '1' when (pl_exec_addr_b = pl_wb_addr_a AND pl_wb_rf_we = '1') else '0';
-exec_feedfwd_data_a_out         <= pl_exec_data_a when exec_feedfwd_data_a_condition = '0' else mux_wb_data;
-exec_feedfwd_data_b_out         <= pl_exec_data_b when exec_feedfwd_data_b_condition = '0' else mux_wb_data;
+exec_feedfwd_data_a_condition   <= '1' when (dec_rf_addr_opA = pl_rf_addr_a AND dec_rf_we = '1') else '0';
+exec_feedfwd_data_b_condition   <= '1' when (dec_rf_addr_opB = pl_rf_addr_a AND dec_rf_we = '1') else '0';
+exec_feedfwd_data_a_out         <= pl_exec_data_a when pre_exec_feedfwd_data_a_condition2 = '0' else mux_wb_data;
+exec_feedfwd_data_b_out         <= pl_exec_data_b when pre_exec_feedfwd_data_b_condition2 = '0' else mux_wb_data;
 
 --Decode Stage - RegFile_Out Feedfwd Mechanic
 rf_feedfwd_data_a_condition   <= '1' when (pl_rf_addr_a = pl_wb_addr_a AND pl_wb_rf_we = '1') else '0';

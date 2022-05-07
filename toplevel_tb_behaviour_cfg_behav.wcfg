@@ -15,10 +15,10 @@
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
       <ZoomEndTime time="1,000.001 ns"></ZoomEndTime>
-      <Cursor1Time time="190.000 ns"></Cursor1Time>
+      <Cursor1Time time="391.230 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="238"></NameColumnWidth>
+      <NameColumnWidth column_width="233"></NameColumnWidth>
       <ValueColumnWidth column_width="72"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="12" />
@@ -69,5 +69,6 @@
    <wvobject fp_name="/toplevel_tb/DUT/pc/PC_reg" type="array">
       <obj_property name="ElementShortName">PC_reg[8:0]</obj_property>
       <obj_property name="ObjectShortName">PC_reg[8:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
 </wave_config>

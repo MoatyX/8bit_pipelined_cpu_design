@@ -54,7 +54,7 @@ begin
             holding <= '1';
         end if;
         
-        if(holding = '1') then
+        if(holding = '1' AND override_enable = '1') then
             holding <= '0';
         end if;
         

@@ -250,8 +250,8 @@ begin
                                 pc_override_offset <= "00000"&Instr(9 downto 3);
                                 branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
                                 sreg_branch_target_condition <= '1';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
-                                sreg_branch_test_begin <= '1';
-                                pc_force_hold <= '1';
+                                sreg_branch_test_begin <= '1';      --control signal, that lets the SREG do the comparison
+                                pc_force_hold <= '1';   --hold the PC
    
                             --BRBC
                             when "01" =>

@@ -76,7 +76,7 @@ begin
         if(sreg_condition_resolved = '1') then
             if(sreg_condition_result = sreg_target_condition) then
                 override_now <= '1';
-                
+--                branch_offset <= (others => '1');
             end if;
         end if;
         

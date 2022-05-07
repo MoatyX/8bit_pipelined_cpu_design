@@ -13,15 +13,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="166.666 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,166.667 ns"></ZoomEndTime>
-      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,000.001 ns"></ZoomEndTime>
+      <Cursor1Time time="190.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="253"></NameColumnWidth>
+      <NameColumnWidth column_width="238"></NameColumnWidth>
       <ValueColumnWidth column_width="72"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="6" />
+   <WVObjectSize size="12" />
    <wvobject fp_name="/toplevel_tb/reset" type="logic">
       <obj_property name="ElementShortName">reset</obj_property>
       <obj_property name="ObjectShortName">reset</obj_property>
@@ -37,138 +37,6 @@
    <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher" type="array">
       <obj_property name="ElementShortName">register_speicher[31:0][7:0]</obj_property>
       <obj_property name="ObjectShortName">register_speicher[31:0][7:0]</obj_property>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[31]" type="array">
-         <obj_property name="ElementShortName">[31][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[31][7:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[30]" type="array">
-         <obj_property name="ElementShortName">[30][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[30][7:0]</obj_property>
-         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[29]" type="array">
-         <obj_property name="ElementShortName">[29][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[29][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[28]" type="array">
-         <obj_property name="ElementShortName">[28][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[28][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[27]" type="array">
-         <obj_property name="ElementShortName">[27][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[27][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[26]" type="array">
-         <obj_property name="ElementShortName">[26][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[26][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[25]" type="array">
-         <obj_property name="ElementShortName">[25][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[25][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[24]" type="array">
-         <obj_property name="ElementShortName">[24][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[24][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[23]" type="array">
-         <obj_property name="ElementShortName">[23][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[23][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[22]" type="array">
-         <obj_property name="ElementShortName">[22][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[22][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[21]" type="array">
-         <obj_property name="ElementShortName">[21][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[21][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[20]" type="array">
-         <obj_property name="ElementShortName">[20][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[20][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[19]" type="array">
-         <obj_property name="ElementShortName">[19][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[19][7:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[18]" type="array">
-         <obj_property name="ElementShortName">[18][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[18][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[17]" type="array">
-         <obj_property name="ElementShortName">[17][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[17][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[16]" type="array">
-         <obj_property name="ElementShortName">[16][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[16][7:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[15]" type="array">
-         <obj_property name="ElementShortName">[15][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[15][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[14]" type="array">
-         <obj_property name="ElementShortName">[14][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[14][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[13]" type="array">
-         <obj_property name="ElementShortName">[13][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[13][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[12]" type="array">
-         <obj_property name="ElementShortName">[12][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[12][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[11]" type="array">
-         <obj_property name="ElementShortName">[11][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[11][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[10]" type="array">
-         <obj_property name="ElementShortName">[10][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[10][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[9]" type="array">
-         <obj_property name="ElementShortName">[9][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[9][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[8]" type="array">
-         <obj_property name="ElementShortName">[8][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[8][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[7]" type="array">
-         <obj_property name="ElementShortName">[7][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[7][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[6]" type="array">
-         <obj_property name="ElementShortName">[6][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[6][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[5]" type="array">
-         <obj_property name="ElementShortName">[5][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[5][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[4]" type="array">
-         <obj_property name="ElementShortName">[4][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[4][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[3]" type="array">
-         <obj_property name="ElementShortName">[3][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[3][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[2]" type="array">
-         <obj_property name="ElementShortName">[2][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[2][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[1]" type="array">
-         <obj_property name="ElementShortName">[1][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[1][7:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher[0]" type="array">
-         <obj_property name="ElementShortName">[0][7:0]</obj_property>
-         <obj_property name="ObjectShortName">[0][7:0]</obj_property>
-      </wvobject>
    </wvobject>
    <wvobject fp_name="/toplevel_tb/DUT/sreg0/curr_status_out" type="array">
       <obj_property name="ElementShortName">curr_status_out[7:0]</obj_property>
@@ -177,5 +45,29 @@
    <wvobject fp_name="/toplevel_tb/DUT/dm/data_mem" type="array">
       <obj_property name="ElementShortName">data_mem[1023:0][7:0]</obj_property>
       <obj_property name="ObjectShortName">data_mem[1023:0][7:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pc/override_enable" type="logic">
+      <obj_property name="ElementShortName">override_enable</obj_property>
+      <obj_property name="ObjectShortName">override_enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/branch_control0/branch_offset_in" type="array">
+      <obj_property name="ElementShortName">branch_offset_in[11:0]</obj_property>
+      <obj_property name="ObjectShortName">branch_offset_in[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/branch_control0/branch_offset_out" type="array">
+      <obj_property name="ElementShortName">branch_offset_out[11:0]</obj_property>
+      <obj_property name="ObjectShortName">branch_offset_out[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pc/offset" type="array">
+      <obj_property name="ElementShortName">offset[11:0]</obj_property>
+      <obj_property name="ObjectShortName">offset[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pc/holding" type="logic">
+      <obj_property name="ElementShortName">holding</obj_property>
+      <obj_property name="ObjectShortName">holding</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pc/PC_reg" type="array">
+      <obj_property name="ElementShortName">PC_reg[8:0]</obj_property>
+      <obj_property name="ObjectShortName">PC_reg[8:0]</obj_property>
    </wvobject>
 </wave_config>

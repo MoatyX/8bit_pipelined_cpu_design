@@ -6,28 +6,34 @@ use work.pkg_processor.all;
 
 entity decoder is
     port(
-        Instr       : in  std_logic_vector(15 downto 0);    -- Eingang vom Programmspeicher
-        addr_opa    : out std_logic_vector(4 downto 0);     -- Adresse von 1. Operand
-        addr_opb    : out std_logic_vector(4 downto 0);     -- Adresse von 2. Operand
-        alu_op_code : out std_logic_vector(3 downto 0);     -- Opcode for ALU
-        dbg_op_code : out std_logic_vector(7 downto 0);     -- opcode for debugging. does not go as input for anything
-        w_e_regfile : out std_logic;                        -- write enable for Registerfile
-        w_e_SREG    : out std_logic_vector(7 downto 0);     -- einzeln Write_enables für SREG - Bits
+        Instr                       : in  std_logic_vector(15 downto 0);    -- Eingang vom Programmspeicher
+        addr_opa                    : out std_logic_vector(4 downto 0);     -- Adresse von 1. Operand
+        addr_opb                    : out std_logic_vector(4 downto 0);     -- Adresse von 2. Operand
+        alu_op_code                 : out std_logic_vector(3 downto 0);     -- Opcode for ALU
+        dbg_op_code                 : out std_logic_vector(7 downto 0);     -- opcode for debugging. does not go as input for anything
+        w_e_regfile                 : out std_logic;                        -- write enable for Registerfile
+        w_e_SREG                    : out std_logic_vector(7 downto 0);     -- einzeln Write_enables für SREG - Bits
 
-        rf_immediate        : out std_logic;
-        alu_immediate       : out std_logic;
-        immediate_value     : out std_logic_vector(7 downto 0) := (others => '0');
-        w_e_dm              : out std_logic;
-        alu_dm_mux          : out std_logic;
-        pc_force_override   : out std_logic;
-        pc_override_offset  : out std_logic_vector(11 downto 0);
-        sp_op               : out std_logic;        --stackpointer operation type (increment(1) or decrement(0))
-        use_sp_addr         : out std_logic         --use the stackpointer
+        rf_immediate                : out std_logic;
+        alu_immediate               : out std_logic;
+        immediate_value             : out std_logic_vector(7 downto 0) := (others => '0');
+        w_e_dm                      : out std_logic;
+        alu_dm_mux                  : out std_logic;
+        pc_force_hold               : out std_logic;
+        pc_force_override           : out std_logic;
+        pc_override_offset          : out std_logic_vector(11 downto 0);
+        sp_op                       : out std_logic;        --stackpointer operation type (increment(1) or decrement(0))
+        use_sp_addr                 : out std_logic;         --use the stackpointer
+        rcall_write                 : out std_logic;
+        ret_read                    : out std_logic;
+        rcall_ret_writter_enable    : out std_logic;
+        sreg_branch_target_condition: out std_logic;
+        sreg_branch_test_begin      : out std_logic;
+        branch_control_enable       : out std_logic
     );
 end decoder;
 
 architecture behavioural of decoder is
-    signal tmp_alu_op_code      : std_logic_vector(3 downto 0);
 begin
 
     -- purpose: Decodierprozess
@@ -38,22 +44,28 @@ begin
     begin  -- process dec_mux
 
         -- Vorzuweisung der Signale, um Latches zu verhindern
-        addr_opa <= "00000";
-        addr_opb <= "00000";
-        alu_op_code <= (others=>('0'));
-        w_e_regfile <= '0';
-        w_e_SREG <= "00000000";
-        rf_immediate <= '0';
-        alu_immediate <= '0';
-        dbg_op_code <= op_NOP&"0000";
-        immediate_value <= (others => '0');
-        w_e_dm <= '0';
-        alu_dm_mux <= '0';
-        pc_override_offset <= (others => '0');
-        tmp_alu_op_code <= (others => '0');
-        pc_force_override <= '0';
-        sp_op <= '0';
-        use_sp_addr <= '0';
+        addr_opa                        <= (others=>('0'));
+        addr_opb                        <= (others=>('0'));
+        alu_op_code                     <= (others=>('0'));
+        w_e_regfile                     <= '0';
+        w_e_SREG                        <= (others=>('0'));
+        rf_immediate                    <= '0';
+        alu_immediate                   <= '0';
+        dbg_op_code                     <= (others=>('0'));
+        immediate_value                 <= (others => '0');
+        w_e_dm                          <= '0';
+        alu_dm_mux                      <= '0';
+        pc_override_offset              <= (others => '0');
+        pc_force_override               <= '0';
+        sp_op                           <= '0';
+        use_sp_addr                     <= '0';
+        rcall_write                     <= '0';
+        ret_read                        <= '0';
+        rcall_ret_writter_enable        <= '0';
+        sreg_branch_target_condition    <= '0';
+        sreg_branch_test_begin          <= '0';
+        branch_control_enable           <= '0';
+        pc_force_hold                   <= '0';
 
         --6bit codes
         case Instr(15 downto 10) is
@@ -234,20 +246,22 @@ begin
                             --BRBS
                             when "00" =>
                                 dbg_op_code <= "0000"&op_brbs;
-                                alu_op_code <= op_brbs;
-                                tmp_alu_op_code <= op_brbs;
-                                alu_immediate <= '1';
-                                immediate_value <= "00000"&Instr(2 downto 0);    --00000sss    
+                                w_e_SREG <= "00000"&Instr(2 downto 0);    --00000sss        --use the SREG signal, since its already connected to the SREG entity
                                 pc_override_offset <= "00000"&Instr(9 downto 3);
-
+                                branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
+                                sreg_branch_target_condition <= '1';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
+                                sreg_branch_test_begin <= '1';
+                                pc_force_hold <= '1';
+   
                             --BRBC
                             when "01" =>
                                 dbg_op_code <= "0000"&op_brbc;
-                                alu_op_code <= op_brbc;
-                                tmp_alu_op_code <= op_brbc;
-                                alu_immediate <= '1';
-                                immediate_value <= "00000"&Instr(2 downto 0);    --00000sss  
+                                w_e_SREG <= "00000"&Instr(2 downto 0);    --00000sss        --use the SREG signal, since its already connected to the SREG entity
                                 pc_override_offset <= "00000"&Instr(9 downto 3);
+                                branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
+                                sreg_branch_target_condition <= '0';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
+                                sreg_branch_test_begin <= '1';
+                                pc_force_hold <= '1';
 
                             when others => null;
                         end case;
@@ -330,15 +344,17 @@ begin
 
                     --RJMP
                     when "1100" =>
-                        pc_override_offset <= Instr(11 downto 0);
                         dbg_op_code <= op_rjmp;
+                        pc_override_offset <= Instr(11 downto 0);
                         pc_force_override <= '1';
+                        branch_control_enable <= '1';
+                        pc_force_hold <= '1';
 
                     --RCALL
                     when "1101" =>
                         dbg_op_code <= op_rcall;
                         pc_override_offset <= Instr(11 downto 0);
-
+                        pc_force_hold <= '1';
 
                     when others => null;
                 end case;

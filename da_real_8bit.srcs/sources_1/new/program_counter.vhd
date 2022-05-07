@@ -34,12 +34,14 @@ entity program_counter is
     clk                 : in  std_logic;
     addr                : out std_logic_vector (8 downto 0);
     override_enable     : in std_logic;
-    offset              : in std_logic_vector (11 downto 0)
+    offset              : in std_logic_vector (11 downto 0);
+    hold                : in std_logic
     );
 end program_counter;
 
 architecture Behavioral of program_counter is
   signal PC_reg : std_logic_vector(8 downto 0);
+  signal holding : std_logic := '0';
 begin
   count : process (clk)
   begin  -- process count
@@ -47,11 +49,24 @@ begin
       if reset = '1' then               -- synchronous reset (active high)
         PC_reg <= (others => '0');
       else
-        if (override_enable='1') then
---            PC_reg <= std_logic_vector(signed(PC_reg) + signed(offset(8 downto 0)) - 1);
-        else
-            PC_reg <= std_logic_vector(unsigned(PC_reg) + 1);
+        
+        if(hold = '1') then
+            holding <= '1';
         end if;
+        
+        if(holding = '1') then
+            holding <= '0';
+        end if;
+        
+        if(override_enable = '1') then
+            PC_reg <= std_logic_vector(signed(PC_reg) + signed(offset(8 downto 0)) + 1);
+        else
+            if(holding = '0' AND hold = '0') then 
+                PC_reg <= std_logic_vector(signed(PC_reg) + 1);
+            end if;
+        end if;
+        
+        
       end if;
     end if;
   end process count;

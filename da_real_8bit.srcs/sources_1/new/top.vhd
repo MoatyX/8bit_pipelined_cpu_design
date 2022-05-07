@@ -38,20 +38,24 @@ signal pc_pm_addr: std_logic_vector(8 downto 0);
 signal pm_dec_instr: std_logic_vector(15 downto 0);
 
 --decoder
-signal dec_rf_addr_opA          : std_logic_vector(4 downto 0);
-signal dec_rf_addr_opB          : std_logic_vector(4 downto 0);
-signal dec_alu_op_code          : std_logic_vector(3 downto 0);
-signal dec_rf_we                : std_logic;
-signal dec_sreg_we              : std_logic_vector(7 downto 0);
-signal dec_rf_im                : std_logic;
-signal dec_alu_im               : std_logic;
-signal dec_im_val               : std_logic_vector(7 downto 0);
-signal dec_dm_we                : std_logic;
-signal dec_mux_alu_dm           : std_logic;
-signal dec_pc_override_enable   : std_logic;
-signal dec_pc_override_offset   : std_logic_vector(11 downto 0);
-signal dec_sp_op                : std_logic;
-signal dec_sp_use               : std_logic;
+signal dec_rf_addr_opA                      : std_logic_vector(4 downto 0);
+signal dec_rf_addr_opB                      : std_logic_vector(4 downto 0);
+signal dec_alu_op_code                      : std_logic_vector(3 downto 0);
+signal dec_rf_we                            : std_logic;
+signal dec_sreg_we                          : std_logic_vector(7 downto 0);
+signal dec_rf_im                            : std_logic;
+signal dec_alu_im                           : std_logic;
+signal dec_im_val                           : std_logic_vector(7 downto 0);
+signal dec_dm_we                            : std_logic;
+signal dec_mux_alu_dm                       : std_logic;
+signal dec_bc_override_enable               : std_logic;
+signal dec_bc_override_offset               : std_logic_vector(11 downto 0);
+signal dec_sp_op                            : std_logic;
+signal dec_sp_use                           : std_logic;
+signal dec_bc_enable                        : std_logic;
+signal dec_bc_sreg_branch_target_condition  : std_logic;
+signal dec_bc_sreg_branch_test_begin        : std_logic;
+signal dec_pc_hold                          : std_logic;
 
 --Register File
 signal rf_alu_data_a            : std_logic_vector(7 downto 0);
@@ -63,6 +67,7 @@ signal alu_sreg_new_sreg        : std_logic_vector(7 downto 0);
 
 --SREG
 signal sreg_alu_curr_status     : std_logic_vector(7 downto 0);
+signal sreg_branch_result       : std_logic;
 
 --Z-Address
 signal z_addr_out                   : std_logic_vector (9 downto 0);
@@ -81,11 +86,17 @@ signal io_seg2          :std_logic_vector(7 downto 0);
 signal io_seg3          :std_logic_vector(7 downto 0);
 signal port_for_btns    : std_logic_vector(7 downto 0);
 
+--Branch Control
+signal bc_pc_override_now       : std_logic;
+signal bc_pc_override_offset    : std_logic_vector(11 downto 0);
+signal bc_mux_nop               : std_logic;
+
 --MUXing
 signal mux_alu_data_b               : std_logic_vector(7 downto 0);
 signal mux_exec_data_out            : std_logic_vector(7 downto 0);
 signal mux_z_addr_src               : std_logic_vector(9 downto 0);
 signal mux_wb_data                  : std_logic_vector(7 downto 0);
+signal mux_instruction              : std_logic_vector(15 downto 0);
 
 ----------------------Pipelining Signals--------------------------------------------------------
 
@@ -102,6 +113,8 @@ signal pl_rf_sp_op                    : std_logic;
 signal pl_rf_sp_use                   : std_logic;
 signal pl_rf_addr_a                   : std_logic_vector(4 downto 0);
 signal pl_rf_addr_b                   : std_logic_vector(4 downto 0);
+signal pl_rf_sreg_branch_test           : std_logic;
+signal pl_rf_sreg_branch_target         : std_logic;
 
 --RegFile <-----> Execute
 signal pl_exec_addr_a                   : std_logic_vector(4 downto 0);
@@ -118,6 +131,8 @@ signal pl_exec_dm_we                    : std_logic;
 signal pl_exec_mux_alu_dm               : std_logic;
 signal pl_exec_sp_op                    : std_logic;
 signal pl_exec_sp_use                   : std_logic;
+signal pl_exec_sreg_branch_test           : std_logic;
+signal pl_exec_sreg_branch_target         : std_logic;
 
 --Execute <-----> Writeback
 signal pl_wb_addr_a                     : std_logic_vector(4 downto 0);
@@ -125,6 +140,8 @@ signal pl_wb_rf_we                      : std_logic;
 signal pl_wb_mux_alu_dm                 : std_logic;
 signal pl_wb_dm_data                    : std_logic_vector(7 downto 0);
 signal pl_wb_alu_data                   : std_logic_vector(7 downto 0);
+signal pl_wb_sreg_branch_test           : std_logic;
+signal pl_wb_sreg_branch_result         : std_logic;
 
 
 --Executre Feedforwarding mechanic
@@ -141,7 +158,6 @@ signal pre_exec_feedfwd_data_b_condition: std_logic;
 signal pre_exec_feedfwd_data_a_condition2: std_logic; 
 signal pre_exec_feedfwd_data_b_condition2: std_logic;
 
---signal tmp,tmp2                              : std_logic_vector(7 downto 0);
 --------------------------------------------------------------------------------
 
 component program_counter is
@@ -150,7 +166,8 @@ component program_counter is
     clk                 : in  std_logic;
     addr                : out std_logic_vector (8 downto 0);
     override_enable     : in std_logic;
-    offset              : in std_logic_vector (11 downto 0)
+    offset              : in std_logic_vector (11 downto 0);
+    hold                : in std_logic
     );
 end component;
 
@@ -161,22 +178,29 @@ end component;
 
 component decoder is
     port(
-        Instr               : in  std_logic_vector(15 downto 0);
-        addr_opa            : out std_logic_vector(4 downto 0);
-        addr_opb            : out std_logic_vector(4 downto 0);
-        alu_op_code         : out std_logic_vector(3 downto 0);
-        dbg_op_code         : out std_logic_vector(7 downto 0);
-        w_e_regfile         : out std_logic;                    
-        w_e_SREG            : out std_logic_vector(7 downto 0);     
-        rf_immediate        : out std_logic;
-        alu_immediate       : out std_logic;
-        immediate_value     : out std_logic_vector(7 downto 0) := (others => '0');
-        w_e_dm              : out std_logic;
-        alu_dm_mux          : out std_logic;
-        pc_force_override   : out std_logic;
-        pc_override_offset  : out std_logic_vector(11 downto 0);
-        sp_op               : out std_logic;
-        use_sp_addr         : out std_logic
+        Instr                       : in  std_logic_vector(15 downto 0);
+        addr_opa                    : out std_logic_vector(4 downto 0);
+        addr_opb                    : out std_logic_vector(4 downto 0);
+        alu_op_code                 : out std_logic_vector(3 downto 0);
+        dbg_op_code                 : out std_logic_vector(7 downto 0);
+        w_e_regfile                 : out std_logic;
+        w_e_SREG                    : out std_logic_vector(7 downto 0);
+        rf_immediate                : out std_logic;
+        alu_immediate               : out std_logic;
+        immediate_value             : out std_logic_vector(7 downto 0) := (others => '0');
+        w_e_dm                      : out std_logic;
+        alu_dm_mux                  : out std_logic;
+        pc_force_hold               : out std_logic;
+        pc_force_override           : out std_logic;
+        pc_override_offset          : out std_logic_vector(11 downto 0);
+        sp_op                       : out std_logic;
+        use_sp_addr                 : out std_logic;
+        rcall_write                 : out std_logic;
+        ret_read                    : out std_logic;
+        rcall_ret_writter_enable    : out std_logic;
+        sreg_branch_target_condition: out std_logic;
+        sreg_branch_test_begin      : out std_logic;
+        branch_control_enable       : out std_logic
     );
 end component;
 
@@ -199,17 +223,18 @@ component ALU
            OPB : in STD_LOGIC_VECTOR (7 downto 0);
            RES : out STD_LOGIC_VECTOR (7 downto 0);
            new_status : out STD_LOGIC_VECTOR (7 downto 0);
-           status_in: in std_logic_vector(7 downto 0);
-           branch_test_result: out std_logic
+           status_in: in std_logic_vector(7 downto 0)
            );
 end component;
 
 component sreg
-    Port ( clk              : in STD_LOGIC;
-            reset           : in std_logic;
-         w_e_sreg           : in std_logic_vector (7 downto 0);
-         new_status_in      : in STD_LOGIC_VECTOR (7 downto 0);
-         curr_status_out    : out STD_LOGIC_VECTOR (7 downto 0)
+    Port (  clk                : in STD_LOGIC;
+            reset              : in std_logic;
+            w_e_sreg           : in std_logic_vector (7 downto 0);
+            new_status_in      : in STD_LOGIC_VECTOR (7 downto 0);
+            sreg_branch_test   : in std_logic;
+            curr_status_out    : out STD_LOGIC_VECTOR (7 downto 0);
+            sreg_branch_result : out std_logic
         );
 end component;
 
@@ -282,6 +307,25 @@ component clk_wiz_0
     );
 end component;
 
+component branch_control
+    port(
+           clk                          : in STD_LOGIC;
+           reset                        : in STD_LOGIC;
+           enable                       : in STD_LOGIC;
+           sreg_condition_resolved      : in STD_LOGIC;
+           sreg_target_condition        : in STD_LOGIC;
+           sreg_condition_result        : in STD_LOGIC;
+           sreg_branch_test             : in std_logic;
+           rcall_status                 : in STD_LOGIC;
+           ret_status                   : in STD_LOGIC;
+           force_override               : in STD_LOGIC;
+           branch_offset_in             : in STD_LOGIC_VECTOR (11 downto 0);
+           branch_offset_out            : out STD_LOGIC_VECTOR (11 downto 0);
+           insert_nop                   : out STD_LOGIC;
+           pc_override_now              : out STD_LOGIC
+    );
+end component;
+
 begin
 
 pc: program_counter
@@ -289,8 +333,9 @@ port map(
     reset               => cpu_reset,
     clk                 => clk,
     addr                => pc_pm_addr,
-    override_enable     => '0',
-    offset              => "000000000000"
+    override_enable     => bc_pc_override_now,
+    offset              => bc_pc_override_offset,
+    hold                => dec_pc_hold
 );
 
 pm: program_memory
@@ -301,22 +346,26 @@ port map(
 
 dec: decoder
 port map (
-    Instr               => pm_dec_instr,
-    addr_opa            => dec_rf_addr_opA,
-    addr_opb            => dec_rf_addr_opB,
-    alu_op_code         => dec_alu_op_code,
-    dbg_op_code         => open,
-    w_e_regfile         => dec_rf_we,
-    w_e_SREG            => dec_sreg_we,
-    rf_immediate        => dec_rf_im,
-    alu_immediate       => dec_alu_im,
-    immediate_value     => dec_im_val,
-    w_e_dm              => dec_dm_we,
-    alu_dm_mux          => dec_mux_alu_dm,
-    pc_force_override   => dec_pc_override_enable,
-    pc_override_offset  => dec_pc_override_offset,
-    sp_op               => dec_sp_op,
-    use_sp_addr         => dec_sp_use
+    Instr                               => mux_instruction,
+    addr_opa                            => dec_rf_addr_opA,
+    addr_opb                            => dec_rf_addr_opB,
+    alu_op_code                         => dec_alu_op_code,
+    dbg_op_code                         => open,
+    w_e_regfile                         => dec_rf_we,
+    w_e_SREG                            => dec_sreg_we,
+    rf_immediate                        => dec_rf_im,
+    alu_immediate                       => dec_alu_im,
+    immediate_value                     => dec_im_val,
+    w_e_dm                              => dec_dm_we,
+    alu_dm_mux                          => dec_mux_alu_dm,
+    pc_force_override                   => dec_bc_override_enable,
+    pc_override_offset                  => dec_bc_override_offset,
+    sp_op                               => dec_sp_op,
+    use_sp_addr                         => dec_sp_use,
+    branch_control_enable               => dec_bc_enable,
+    sreg_branch_target_condition        => dec_bc_sreg_branch_target_condition,
+    sreg_branch_test_begin              => dec_bc_sreg_branch_test_begin,
+    pc_force_hold                       => dec_pc_hold
 );
 
 rf: register_file
@@ -331,28 +380,6 @@ port map(
     data_in     => mux_wb_data
 );
 
---alu0: ALU
---port map(
---    OPCODE              => pl_exec_alu_op,
---    OPA                 => exec_feedfwd_data_a_out,
---    OPB                 => mux_alu_data_b,
---    RES                 => alu_data_output,
---    new_status          => alu_sreg_new_sreg,
---    status_in           => sreg_alu_curr_status,
---    branch_test_result  => open
---);
-
---sreg0: sreg
---port map(
---    clk             => clk,
---    reset           => cpu_reset,
-----    w_e_sreg        => tmp2,
-----    new_status_in   => tmp,    
---    w_e_sreg        => pl_exec_sreg_we,
---    new_status_in   => alu_sreg_new_sreg,
---    curr_status_out => sreg_alu_curr_status
---);
-
 alu0: ALU
 port map(
     OPCODE              => pl_exec_alu_op,
@@ -360,20 +387,20 @@ port map(
     OPB                 => mux_alu_data_b,
     RES                 => alu_data_output,
     new_status          => alu_sreg_new_sreg,
-    status_in           => sreg_alu_curr_status,
-    branch_test_result  => open
+    status_in           => sreg_alu_curr_status
 );
 
 sreg0: sreg
 port map(
-    clk             => clk,
-    reset           => cpu_reset,
-    w_e_sreg        => pl_exec_sreg_we,
-    new_status_in   => alu_sreg_new_sreg,
-    curr_status_out => sreg_alu_curr_status
+    clk                 => clk,
+    reset               => cpu_reset,
+    w_e_sreg            => pl_exec_sreg_we,
+    new_status_in       => alu_sreg_new_sreg,
+    curr_status_out     => sreg_alu_curr_status,
+    sreg_branch_result  => sreg_branch_result,
+    sreg_branch_test    => pl_exec_sreg_branch_test
 );
 
---TODO needs another thought
 z_addr0: z_addr
 port map (
     clk                     => clk,       
@@ -445,6 +472,26 @@ clk <= clk_in;
 --    clk_in
 --);
 
+branch_control0: branch_control
+port map(
+    clk                         => clk,
+    reset                       => cpu_reset,
+    enable                      => dec_bc_enable,
+    sreg_condition_resolved     => pl_wb_sreg_branch_test,
+    sreg_target_condition       => dec_bc_sreg_branch_target_condition,   
+    sreg_condition_result       => pl_wb_sreg_branch_result,  
+    sreg_branch_test            => dec_bc_sreg_branch_test_begin,       
+    rcall_status                => '0',       
+    ret_status                  => '0',         
+    force_override              => dec_bc_override_enable,        
+    branch_offset_in            => dec_bc_override_offset,
+    branch_offset_out           => bc_pc_override_offset,
+--    branch_offset_out           => open,
+    pc_override_now             => bc_pc_override_now,
+--    pc_override_now             => open,
+    insert_nop                  => bc_mux_nop
+);
+
 
 --pipeline Fetch -> RegRead
 process(clk)
@@ -465,6 +512,8 @@ begin
             pl_rf_rf_im                 <= '0';
             pre_exec_feedfwd_data_a_condition                        <= '0';
             pre_exec_feedfwd_data_b_condition                        <= '0';
+            pl_rf_sreg_branch_target    <= '0';
+            pl_rf_sreg_branch_test      <= '0';
         else
             pl_rf_alu_op_code           <= dec_alu_op_code;
             pl_rf_rf_we                 <= dec_rf_we;      
@@ -480,6 +529,8 @@ begin
             pl_rf_rf_im                 <= dec_rf_im;
             pre_exec_feedfwd_data_a_condition                        <= exec_feedfwd_data_a_condition;
             pre_exec_feedfwd_data_b_condition                        <= exec_feedfwd_data_b_condition;
+            pl_rf_sreg_branch_target    <= dec_bc_sreg_branch_target_condition;
+            pl_rf_sreg_branch_test      <= dec_bc_sreg_branch_test_begin;
         end if;
     end if;
 end process;
@@ -505,6 +556,8 @@ begin
             pl_exec_sp_use          <= '0';
             pre_exec_feedfwd_data_a_condition2                        <= '0';
             pre_exec_feedfwd_data_b_condition2                        <= '0';
+            pl_exec_sreg_branch_test    <= '0';
+            pl_exec_sreg_branch_target  <= '0';
         else
             pl_exec_addr_a          <= pl_rf_addr_a; 
             pl_exec_addr_b          <= pl_rf_addr_b;
@@ -522,6 +575,8 @@ begin
             pl_exec_sp_use          <= pl_rf_sp_use;
             pre_exec_feedfwd_data_a_condition2                        <= pre_exec_feedfwd_data_a_condition;
             pre_exec_feedfwd_data_b_condition2                        <= pre_exec_feedfwd_data_b_condition;
+            pl_exec_sreg_branch_target  <= pl_rf_sreg_branch_target;
+            pl_exec_sreg_branch_test    <= pl_rf_sreg_branch_test;
         end if;
     end if;
 end process;
@@ -535,12 +590,16 @@ begin
             pl_wb_rf_we         <= '0';
             pl_wb_dm_data       <= (others => '0');
             pl_wb_mux_alu_dm    <= '0';
+            pl_wb_sreg_branch_result    <= '0';
+            pl_wb_sreg_branch_test      <= '0';
         else
             pl_wb_addr_a        <= pl_exec_addr_a;
             pl_wb_alu_data      <= mux_exec_data_out;
             pl_wb_rf_we         <= pl_exec_rf_we;
             pl_wb_dm_data       <= dm_data_out;
-            pl_wb_mux_alu_dm    <= pl_exec_mux_alu_dm;            
+            pl_wb_mux_alu_dm    <= pl_exec_mux_alu_dm;
+            pl_wb_sreg_branch_result    <= sreg_branch_result;
+            pl_wb_sreg_branch_test      <= pl_exec_sreg_branch_test;            
         end if;
     end if;
 end process;
@@ -562,6 +621,9 @@ mux_z_addr_src  <= z_addr_out when pl_exec_sp_use = '0' else sp_dm_addr;
 
 --MUX the final data coming out of the pipelines going into the RF
 mux_wb_data <= pl_wb_alu_data when pl_wb_mux_alu_dm = '0' else pl_wb_dm_data;
+
+--MUX the instruction going into the decoder. used for inserting NOPs to force the CPU to wait
+mux_instruction <= pm_dec_instr when bc_mux_nop = '0' else (others => '0');
 
 
 --Execute Stage - ALU_In Feedfwd mechanic

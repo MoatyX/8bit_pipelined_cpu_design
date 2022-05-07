@@ -11,8 +11,7 @@ entity ALU is
            OPB : in STD_LOGIC_VECTOR (7 downto 0);
            RES : out STD_LOGIC_VECTOR (7 downto 0);
            new_status : out STD_LOGIC_VECTOR (7 downto 0);
-           status_in: in std_logic_vector(7 downto 0);
-           branch_test_result: out std_logic
+           status_in: in std_logic_vector(7 downto 0)
            );
 end ALU;
 
@@ -31,7 +30,6 @@ begin
   kern_ALU: process (OPA, OPB, OPCODE, status_in)
   begin  -- process kern_ALU
     erg <= "00000000";                  -- verhindert Latches
-    branch_test_result <= '0';
     case OPCODE is
       -- ADD --> Addition
       when op_add =>

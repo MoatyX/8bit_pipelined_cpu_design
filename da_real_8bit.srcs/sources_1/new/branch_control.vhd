@@ -39,8 +39,6 @@ entity branch_control is
            sreg_target_condition        : in STD_LOGIC;
            sreg_condition_result        : in STD_LOGIC;
            sreg_branch_test             : in std_logic;
-           rcall_status                 : in STD_LOGIC;
-           ret_status                   : in STD_LOGIC;
            force_override               : in STD_LOGIC;
            branch_offset_in             : in STD_LOGIC_VECTOR (11 downto 0);
            branch_offset_out            : out STD_LOGIC_VECTOR (11 downto 0);
@@ -59,6 +57,11 @@ begin
        
     if(rising_edge(clk)) then
         insert_nop          <= '0';
+        
+        if(reset = '1') then
+            branch_offset <= (others => '0');
+            override_now <= '0';
+        end if;
         
         if(enable = '1') then
             branch_offset <= branch_offset_in;

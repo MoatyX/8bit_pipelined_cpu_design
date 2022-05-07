@@ -316,8 +316,6 @@ component branch_control
            sreg_target_condition        : in STD_LOGIC;
            sreg_condition_result        : in STD_LOGIC;
            sreg_branch_test             : in std_logic;
-           rcall_status                 : in STD_LOGIC;
-           ret_status                   : in STD_LOGIC;
            force_override               : in STD_LOGIC;
            branch_offset_in             : in STD_LOGIC_VECTOR (11 downto 0);
            branch_offset_out            : out STD_LOGIC_VECTOR (11 downto 0);
@@ -463,14 +461,14 @@ port map(
     db      => dp
 );
 
-clk <= clk_in;
---clk_wiz: clk_wiz_0
---port map (
---    clk,
---    cpu_reset,
---    open,
---    clk_in
---);
+--clk <= clk_in;
+clk_wiz: clk_wiz_0
+port map (
+    clk,
+    cpu_reset,
+    open,
+    clk_in
+);
 
 branch_control0: branch_control
 port map(
@@ -480,9 +478,7 @@ port map(
     sreg_condition_resolved     => pl_wb_sreg_branch_test,
     sreg_target_condition       => dec_bc_sreg_branch_target_condition,   
     sreg_condition_result       => pl_wb_sreg_branch_result,  
-    sreg_branch_test            => dec_bc_sreg_branch_test_begin,       
-    rcall_status                => '0',       
-    ret_status                  => '0',         
+    sreg_branch_test            => dec_bc_sreg_branch_test_begin,              
     force_override              => dec_bc_override_enable,        
     branch_offset_in            => dec_bc_override_offset,
     branch_offset_out           => bc_pc_override_offset,
@@ -498,39 +494,39 @@ process(clk)
 begin
     if(rising_edge(clk)) then
         if(cpu_reset = '1') then
-            pl_rf_alu_op_code           <= (others => '0');
-            pl_rf_rf_we                 <= '0';      
-            pl_rf_sreg_we               <= (others => '0');   
-            pl_rf_dataMem_we            <= '0';
-            pl_rf_mux_alu_dm            <= '0'; 
-            pl_rf_sp_op                 <= '0';      
-            pl_rf_sp_use                <= '0';     
-            pl_rf_im_val                <= (others => '0');    
-            pl_rf_alu_im                <= '0';     
-            pl_rf_addr_a                <= (others => '0');
-            pl_rf_addr_b                <= (others => '0');
-            pl_rf_rf_im                 <= '0';
-            pre_exec_feedfwd_data_a_condition                        <= '0';
-            pre_exec_feedfwd_data_b_condition                        <= '0';
-            pl_rf_sreg_branch_target    <= '0';
-            pl_rf_sreg_branch_test      <= '0';
+            pl_rf_alu_op_code                   <= (others => '0');
+            pl_rf_rf_we                         <= '0';      
+            pl_rf_sreg_we                       <= (others => '0');   
+            pl_rf_dataMem_we                    <= '0';
+            pl_rf_mux_alu_dm                    <= '0'; 
+            pl_rf_sp_op                         <= '0';      
+            pl_rf_sp_use                        <= '0';     
+            pl_rf_im_val                        <= (others => '0');    
+            pl_rf_alu_im                        <= '0';     
+            pl_rf_addr_a                        <= (others => '0');
+            pl_rf_addr_b                        <= (others => '0');
+            pl_rf_rf_im                         <= '0';
+            pre_exec_feedfwd_data_a_condition   <= '0';
+            pre_exec_feedfwd_data_b_condition   <= '0';
+            pl_rf_sreg_branch_target            <= '0';
+            pl_rf_sreg_branch_test              <= '0';
         else
-            pl_rf_alu_op_code           <= dec_alu_op_code;
-            pl_rf_rf_we                 <= dec_rf_we;      
-            pl_rf_sreg_we               <= dec_sreg_we;    
-            pl_rf_dataMem_we            <= dec_dm_we;      
-            pl_rf_mux_alu_dm            <= dec_mux_alu_dm; 
-            pl_rf_sp_op                 <= dec_sp_op;      
-            pl_rf_sp_use                <= dec_sp_use;     
-            pl_rf_im_val                <= dec_im_val;     
-            pl_rf_alu_im                <= dec_alu_im;     
-            pl_rf_addr_a                <= dec_rf_addr_opA;
-            pl_rf_addr_b                <= dec_rf_addr_opB;
-            pl_rf_rf_im                 <= dec_rf_im;
-            pre_exec_feedfwd_data_a_condition                        <= exec_feedfwd_data_a_condition;
-            pre_exec_feedfwd_data_b_condition                        <= exec_feedfwd_data_b_condition;
-            pl_rf_sreg_branch_target    <= dec_bc_sreg_branch_target_condition;
-            pl_rf_sreg_branch_test      <= dec_bc_sreg_branch_test_begin;
+            pl_rf_alu_op_code                   <= dec_alu_op_code;
+            pl_rf_rf_we                         <= dec_rf_we;      
+            pl_rf_sreg_we                       <= dec_sreg_we;    
+            pl_rf_dataMem_we                    <= dec_dm_we;      
+            pl_rf_mux_alu_dm                    <= dec_mux_alu_dm; 
+            pl_rf_sp_op                         <= dec_sp_op;      
+            pl_rf_sp_use                        <= dec_sp_use;     
+            pl_rf_im_val                        <= dec_im_val;     
+            pl_rf_alu_im                        <= dec_alu_im;     
+            pl_rf_addr_a                        <= dec_rf_addr_opA;
+            pl_rf_addr_b                        <= dec_rf_addr_opB;
+            pl_rf_rf_im                         <= dec_rf_im;
+            pre_exec_feedfwd_data_a_condition   <= exec_feedfwd_data_a_condition;
+            pre_exec_feedfwd_data_b_condition   <= exec_feedfwd_data_b_condition;
+            pl_rf_sreg_branch_target            <= dec_bc_sreg_branch_target_condition;
+            pl_rf_sreg_branch_test              <= dec_bc_sreg_branch_test_begin;
         end if;
     end if;
 end process;
@@ -540,43 +536,43 @@ process(clk)
 begin
     if(rising_edge(clk)) then
         if(cpu_reset = '1') then
-            pl_exec_addr_a          <= (others => '0');  
-            pl_exec_addr_b          <= (others => '0');
-            pl_exec_data_a          <= (others => '0');
-            pl_exec_data_b          <= (others => '0');
-            pl_exec_alu_op          <= (others => '0');
-            pl_exec_rf_we           <= '0';
-            pl_exec_sreg_we         <= (others => '0');
-            pl_exec_rf_im           <= '0';
-            pl_exec_alu_im          <= '0';
-            pl_exec_im_val          <= (others => '0');
-            pl_exec_dm_we           <= '0';
-            pl_exec_mux_alu_dm      <= '0';
-            pl_exec_sp_op           <= '0';
-            pl_exec_sp_use          <= '0';
-            pre_exec_feedfwd_data_a_condition2                        <= '0';
-            pre_exec_feedfwd_data_b_condition2                        <= '0';
-            pl_exec_sreg_branch_test    <= '0';
-            pl_exec_sreg_branch_target  <= '0';
+            pl_exec_addr_a                          <= (others => '0');  
+            pl_exec_addr_b                          <= (others => '0');
+            pl_exec_data_a                          <= (others => '0');
+            pl_exec_data_b                          <= (others => '0');
+            pl_exec_alu_op                          <= (others => '0');
+            pl_exec_rf_we                           <= '0';
+            pl_exec_sreg_we                         <= (others => '0');
+            pl_exec_rf_im                           <= '0';
+            pl_exec_alu_im                          <= '0';
+            pl_exec_im_val                          <= (others => '0');
+            pl_exec_dm_we                           <= '0';
+            pl_exec_mux_alu_dm                      <= '0';
+            pl_exec_sp_op                           <= '0';
+            pl_exec_sp_use                          <= '0';
+            pre_exec_feedfwd_data_a_condition2      <= '0';
+            pre_exec_feedfwd_data_b_condition2      <= '0';
+            pl_exec_sreg_branch_test                <= '0';
+            pl_exec_sreg_branch_target              <= '0';
         else
-            pl_exec_addr_a          <= pl_rf_addr_a; 
-            pl_exec_addr_b          <= pl_rf_addr_b;
-            pl_exec_data_a          <= rf_feedfwd_data_a_out;
-            pl_exec_data_b          <= rf_feedfwd_data_b_out;
-            pl_exec_alu_op          <= pl_rf_alu_op_code;
-            pl_exec_rf_we           <= pl_rf_rf_we;
-            pl_exec_sreg_we         <= pl_rf_sreg_we;
-            pl_exec_rf_im           <= pl_rf_rf_im;
-            pl_exec_alu_im          <= pl_rf_alu_im;
-            pl_exec_im_val          <= pl_rf_im_val;
-            pl_exec_dm_we           <= pl_rf_dataMem_we;
-            pl_exec_mux_alu_dm      <= pl_rf_mux_alu_dm;
-            pl_exec_sp_op           <= pl_rf_sp_op;
-            pl_exec_sp_use          <= pl_rf_sp_use;
-            pre_exec_feedfwd_data_a_condition2                        <= pre_exec_feedfwd_data_a_condition;
-            pre_exec_feedfwd_data_b_condition2                        <= pre_exec_feedfwd_data_b_condition;
-            pl_exec_sreg_branch_target  <= pl_rf_sreg_branch_target;
-            pl_exec_sreg_branch_test    <= pl_rf_sreg_branch_test;
+            pl_exec_addr_a                          <= pl_rf_addr_a; 
+            pl_exec_addr_b                          <= pl_rf_addr_b;
+            pl_exec_data_a                          <= rf_feedfwd_data_a_out;
+            pl_exec_data_b                          <= rf_feedfwd_data_b_out;
+            pl_exec_alu_op                          <= pl_rf_alu_op_code;
+            pl_exec_rf_we                           <= pl_rf_rf_we;
+            pl_exec_sreg_we                         <= pl_rf_sreg_we;
+            pl_exec_rf_im                           <= pl_rf_rf_im;
+            pl_exec_alu_im                          <= pl_rf_alu_im;
+            pl_exec_im_val                          <= pl_rf_im_val;
+            pl_exec_dm_we                           <= pl_rf_dataMem_we;
+            pl_exec_mux_alu_dm                      <= pl_rf_mux_alu_dm;
+            pl_exec_sp_op                           <= pl_rf_sp_op;
+            pl_exec_sp_use                          <= pl_rf_sp_use;
+            pre_exec_feedfwd_data_a_condition2      <= pre_exec_feedfwd_data_a_condition;
+            pre_exec_feedfwd_data_b_condition2      <= pre_exec_feedfwd_data_b_condition;
+            pl_exec_sreg_branch_target              <= pl_rf_sreg_branch_target;
+            pl_exec_sreg_branch_test                <= pl_rf_sreg_branch_test;
         end if;
     end if;
 end process;
@@ -585,19 +581,19 @@ process(clk)
 begin
     if(rising_edge(clk)) then
         if(cpu_reset = '1') then
-            pl_wb_addr_a        <= (others => '0');
-            pl_wb_alu_data      <= (others => '0');
-            pl_wb_rf_we         <= '0';
-            pl_wb_dm_data       <= (others => '0');
-            pl_wb_mux_alu_dm    <= '0';
+            pl_wb_addr_a                <= (others => '0');
+            pl_wb_alu_data              <= (others => '0');
+            pl_wb_rf_we                 <= '0';
+            pl_wb_dm_data               <= (others => '0');
+            pl_wb_mux_alu_dm            <= '0';
             pl_wb_sreg_branch_result    <= '0';
             pl_wb_sreg_branch_test      <= '0';
         else
-            pl_wb_addr_a        <= pl_exec_addr_a;
-            pl_wb_alu_data      <= mux_exec_data_out;
-            pl_wb_rf_we         <= pl_exec_rf_we;
-            pl_wb_dm_data       <= dm_data_out;
-            pl_wb_mux_alu_dm    <= pl_exec_mux_alu_dm;
+            pl_wb_addr_a                <= pl_exec_addr_a;
+            pl_wb_alu_data              <= mux_exec_data_out;
+            pl_wb_rf_we                 <= pl_exec_rf_we;
+            pl_wb_dm_data               <= dm_data_out;
+            pl_wb_mux_alu_dm            <= pl_exec_mux_alu_dm;
             pl_wb_sreg_branch_result    <= sreg_branch_result;
             pl_wb_sreg_branch_test      <= pl_exec_sreg_branch_test;            
         end if;

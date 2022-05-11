@@ -56,6 +56,7 @@ signal dec_bc_enable                        : std_logic;
 signal dec_bc_sreg_branch_target_condition  : std_logic;
 signal dec_bc_sreg_branch_test_begin        : std_logic;
 signal dec_pc_hold                          : std_logic;
+signal dec_rcall_write                      : std_logic;
 
 --Register File
 signal rf_alu_data_a            : std_logic_vector(7 downto 0);
@@ -91,12 +92,24 @@ signal bc_pc_override_now       : std_logic;
 signal bc_pc_override_offset    : std_logic_vector(11 downto 0);
 signal bc_mux_nop               : std_logic;
 
+--rcall_ret
+signal rrc_dm_data_src      : std_logic;
+signal rcc_sp_op            : std_logic;
+signal rcc_sp_use           : std_logic;
+signal rcc_dm_we            : std_logic;
+signal rcc_bc_rcall_finish  : std_logic;
+signal rcc_byte             : std_logic_vector(7 downto 0);
+signal rcc_offset_out       : std_logic_vector(11 downto 0);
+
+
 --MUXing
 signal mux_alu_data_b               : std_logic_vector(7 downto 0);
 signal mux_exec_data_out            : std_logic_vector(7 downto 0);
 signal mux_z_addr_src               : std_logic_vector(9 downto 0);
 signal mux_wb_data                  : std_logic_vector(7 downto 0);
 signal mux_instruction              : std_logic_vector(15 downto 0);
+signal mux_bc_override_now          : std_logic;
+signal mux_bc_override_offset       : std_logic_vector(11 downto 0);
 
 ----------------------Pipelining Signals--------------------------------------------------------
 
@@ -115,6 +128,10 @@ signal pl_rf_addr_a                   : std_logic_vector(4 downto 0);
 signal pl_rf_addr_b                   : std_logic_vector(4 downto 0);
 signal pl_rf_sreg_branch_test           : std_logic;
 signal pl_rf_sreg_branch_target         : std_logic;
+signal pl_rf_rrc_offset                 : std_logic_vector(11 downto 0);
+signal pl_rf_rrc_offset_byte            : std_logic_vector(7 downto 0);
+signal pl_rf_rrc_dm_data_src            : std_logic;
+signal pl_rf_rrc_bc_rcall_finish        : std_logic;
 
 --RegFile <-----> Execute
 signal pl_exec_addr_a                   : std_logic_vector(4 downto 0);
@@ -133,6 +150,10 @@ signal pl_exec_sp_op                    : std_logic;
 signal pl_exec_sp_use                   : std_logic;
 signal pl_exec_sreg_branch_test           : std_logic;
 signal pl_exec_sreg_branch_target         : std_logic;
+signal pl_exec_rrc_offset                 : std_logic_vector(11 downto 0);
+signal pl_exec_rrc_offset_byte            : std_logic_vector(7 downto 0);
+signal pl_exec_rrc_dm_data_src            : std_logic;
+signal pl_exec_rrc_bc_rcall_finish        : std_logic;
 
 --Execute <-----> Writeback
 signal pl_wb_addr_a                     : std_logic_vector(4 downto 0);
@@ -142,6 +163,8 @@ signal pl_wb_dm_data                    : std_logic_vector(7 downto 0);
 signal pl_wb_alu_data                   : std_logic_vector(7 downto 0);
 signal pl_wb_sreg_branch_test           : std_logic;
 signal pl_wb_sreg_branch_result         : std_logic;
+signal pl_wb_rrc_offset                 : std_logic_vector(11 downto 0);
+signal pl_wb_rrc_bc_rcall_finish        : std_logic;
 
 
 --Executre Feedforwarding mechanic
@@ -157,6 +180,9 @@ signal pre_exec_feedfwd_data_a_condition: std_logic;
 signal pre_exec_feedfwd_data_b_condition: std_logic;
 signal pre_exec_feedfwd_data_a_condition2: std_logic; 
 signal pre_exec_feedfwd_data_b_condition2: std_logic;
+
+signal pl_mux_bc_override_now          : std_logic;
+signal pl_mux_bc_override_offset       : std_logic_vector(11 downto 0);
 
 --------------------------------------------------------------------------------
 
@@ -324,6 +350,21 @@ component branch_control
     );
 end component;
 
+component rcall_ret_controller
+    Port ( clk : in STD_LOGIC;
+           reset : in STD_LOGIC;
+           enable : in STD_LOGIC;
+           ret_read : in STD_LOGIC;
+           rcall_write : in STD_LOGIC;
+           target_offset : in STD_LOGIC_VECTOR (11 downto 0);
+           target_offset_out : out STD_LOGIC_VECTOR (11 downto 0);
+           rcall_write_finish : out STD_LOGIC;
+           offset_byte : out STD_LOGIC_VECTOR (7 downto 0);
+           sp_use : out STD_LOGIC;
+           sp_op : out STD_LOGIC;
+           dataMem_we : out STD_LOGIC);
+end component;           
+
 begin
 
 pc: program_counter
@@ -363,7 +404,8 @@ port map (
     branch_control_enable               => dec_bc_enable,
     sreg_branch_target_condition        => dec_bc_sreg_branch_target_condition,
     sreg_branch_test_begin              => dec_bc_sreg_branch_test_begin,
-    pc_force_hold                       => dec_pc_hold
+    pc_force_hold                       => dec_pc_hold,
+    rcall_write                         => dec_rcall_write
 );
 
 rf: register_file
@@ -482,12 +524,38 @@ port map(
     force_override              => dec_bc_override_enable,        
     branch_offset_in            => dec_bc_override_offset,
     branch_offset_out           => bc_pc_override_offset,
---    branch_offset_out           => open,
     pc_override_now             => bc_pc_override_now,
---    pc_override_now             => open,
     insert_nop                  => bc_mux_nop
 );
 
+stack_branch_ctrl: rcall_ret_controller
+port map (
+    clk                     => clk,
+    reset                   => cpu_reset,
+    enable                  => dec_rcall_write,
+    ret_read                => '0',
+    rcall_write             => dec_rcall_write,
+    target_offset           => dec_bc_override_offset,
+    target_offset_out       => rcc_offset_out,
+    rcall_write_finish      => rcc_bc_rcall_finish,
+    offset_byte             => rcc_byte,
+    sp_use                  => rcc_sp_use,
+    sp_op                   => rcc_sp_op,
+    dataMem_we              => rcc_dm_we
+);
+
+process(clk)
+begin
+    if(rising_edge(clk)) then
+        if(cpu_reset = '1') then
+            pl_mux_bc_override_now <= '0';
+            pl_mux_bc_override_offset <= (others => '0');
+        else
+            pl_mux_bc_override_now <= mux_bc_override_now;
+            pl_mux_bc_override_offset <= mux_bc_override_offset;            
+        end if;
+    end if;
+end process;
 
 --pipeline Fetch -> RegRead
 process(clk)
@@ -510,6 +578,10 @@ begin
             pre_exec_feedfwd_data_b_condition   <= '0';
             pl_rf_sreg_branch_target            <= '0';
             pl_rf_sreg_branch_test              <= '0';
+            pl_rf_rrc_offset                    <= (others => '0');         
+            pl_rf_rrc_offset_byte               <= (others => '0');  
+            pl_rf_rrc_dm_data_src               <= '0';    
+            pl_rf_rrc_bc_rcall_finish           <= '0';            
         else
             pl_rf_alu_op_code                   <= dec_alu_op_code;
             pl_rf_rf_we                         <= dec_rf_we;      
@@ -527,6 +599,10 @@ begin
             pre_exec_feedfwd_data_b_condition   <= exec_feedfwd_data_b_condition;
             pl_rf_sreg_branch_target            <= dec_bc_sreg_branch_target_condition;
             pl_rf_sreg_branch_test              <= dec_bc_sreg_branch_test_begin;
+            pl_rf_rrc_offset                    <= rcc_offset_out;
+            pl_rf_rrc_offset_byte               <= rcc_byte;
+            pl_rf_rrc_dm_data_src               <= dec_rcall_write;            
+            pl_rf_rrc_bc_rcall_finish           <= rcc_bc_rcall_finish;                        
         end if;
     end if;
 end process;
@@ -554,6 +630,10 @@ begin
             pre_exec_feedfwd_data_b_condition2      <= '0';
             pl_exec_sreg_branch_test                <= '0';
             pl_exec_sreg_branch_target              <= '0';
+            pl_exec_rrc_bc_rcall_finish             <= '0';
+            pl_exec_rrc_dm_data_src                 <= '0';
+            pl_exec_rrc_offset                      <= (others => '0');
+            pl_exec_rrc_offset_byte                 <= (others => '0');
         else
             pl_exec_addr_a                          <= pl_rf_addr_a; 
             pl_exec_addr_b                          <= pl_rf_addr_b;
@@ -573,6 +653,10 @@ begin
             pre_exec_feedfwd_data_b_condition2      <= pre_exec_feedfwd_data_b_condition;
             pl_exec_sreg_branch_target              <= pl_rf_sreg_branch_target;
             pl_exec_sreg_branch_test                <= pl_rf_sreg_branch_test;
+            pl_exec_rrc_bc_rcall_finish             <= pl_rf_rrc_bc_rcall_finish;
+            pl_exec_rrc_dm_data_src                 <= pl_rf_rrc_dm_data_src;
+            pl_exec_rrc_offset                      <= pl_rf_rrc_offset;
+            pl_exec_rrc_offset_byte                 <= pl_rf_rrc_offset_byte;            
         end if;
     end if;
 end process;
@@ -588,6 +672,8 @@ begin
             pl_wb_mux_alu_dm            <= '0';
             pl_wb_sreg_branch_result    <= '0';
             pl_wb_sreg_branch_test      <= '0';
+            pl_wb_rrc_bc_rcall_finish   <= '0';
+            pl_wb_rrc_offset            <= (others => '0');
         else
             pl_wb_addr_a                <= pl_exec_addr_a;
             pl_wb_alu_data              <= mux_exec_data_out;
@@ -595,7 +681,9 @@ begin
             pl_wb_dm_data               <= dm_data_out;
             pl_wb_mux_alu_dm            <= pl_exec_mux_alu_dm;
             pl_wb_sreg_branch_result    <= sreg_branch_result;
-            pl_wb_sreg_branch_test      <= pl_exec_sreg_branch_test;            
+            pl_wb_sreg_branch_test      <= pl_exec_sreg_branch_test;
+            pl_wb_rrc_bc_rcall_finish   <= pl_exec_rrc_bc_rcall_finish;
+            pl_wb_rrc_offset            <= pl_exec_rrc_offset;            
         end if;
     end if;
 end process;
@@ -620,6 +708,10 @@ mux_wb_data <= pl_wb_alu_data when pl_wb_mux_alu_dm = '0' else pl_wb_dm_data;
 
 --MUX the instruction going into the decoder. used for inserting NOPs to force the CPU to wait
 mux_instruction <= pm_dec_instr when bc_mux_nop = '0' else (others => '0');
+
+--MUX where the PC override now signal is coming from (important for RCALL and RET)
+mux_bc_override_now <= dec_bc_override_enable when pl_wb_rrc_bc_rcall_finish = '0'  else '1';
+mux_bc_override_offset  <= dec_bc_override_offset when pl_wb_rrc_bc_rcall_finish = '0' else pl_wb_rrc_offset;
 
 
 --Execute Stage - ALU_In Feedfwd mechanic

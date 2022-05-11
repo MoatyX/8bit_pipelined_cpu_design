@@ -355,6 +355,7 @@ begin
                         dbg_op_code <= op_rcall;
                         pc_override_offset <= Instr(11 downto 0);
                         pc_force_hold <= '1';
+                        rcall_write <= '1';
 
                     when others => null;
                 end case;

@@ -13,15 +13,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,000.001 ns"></ZoomEndTime>
+      <ZoomStartTime time="10.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,198.001 ns"></ZoomEndTime>
       <Cursor1Time time="1,000.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="218"></NameColumnWidth>
+      <NameColumnWidth column_width="208"></NameColumnWidth>
       <ValueColumnWidth column_width="72"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="11" />
+   <WVObjectSize size="15" />
    <wvobject fp_name="/toplevel_tb/reset" type="logic">
       <obj_property name="ElementShortName">reset</obj_property>
       <obj_property name="ObjectShortName">reset</obj_property>
@@ -54,10 +54,6 @@
       <obj_property name="ElementShortName">offset[11:0]</obj_property>
       <obj_property name="ObjectShortName">offset[11:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/toplevel_tb/DUT/branch_control0/hold_pc" type="logic">
-      <obj_property name="ElementShortName">hold_pc</obj_property>
-      <obj_property name="ObjectShortName">hold_pc</obj_property>
-   </wvobject>
    <wvobject fp_name="/toplevel_tb/DUT/branch_control0/pc_override_now" type="logic">
       <obj_property name="ElementShortName">pc_override_now</obj_property>
       <obj_property name="ObjectShortName">pc_override_now</obj_property>
@@ -66,5 +62,25 @@
       <obj_property name="ElementShortName">PC_reg[8:0]</obj_property>
       <obj_property name="ObjectShortName">PC_reg[8:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/branch_control0/branch_cond_ready" type="logic">
+      <obj_property name="ElementShortName">branch_cond_ready</obj_property>
+      <obj_property name="ObjectShortName">branch_cond_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/branch_control0/branch_offset_saved" type="logic">
+      <obj_property name="ElementShortName">branch_offset_saved</obj_property>
+      <obj_property name="ObjectShortName">branch_offset_saved</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/branch_control0/local_reset" type="logic">
+      <obj_property name="ElementShortName">local_reset</obj_property>
+      <obj_property name="ObjectShortName">local_reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/branch_control0/branch_now" type="logic">
+      <obj_property name="ElementShortName">branch_now</obj_property>
+      <obj_property name="ObjectShortName">branch_now</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pc/holding" type="logic">
+      <obj_property name="ElementShortName">holding</obj_property>
+      <obj_property name="ObjectShortName">holding</obj_property>
    </wvobject>
 </wave_config>

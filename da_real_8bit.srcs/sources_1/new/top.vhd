@@ -48,14 +48,14 @@ signal dec_alu_im                           : std_logic;
 signal dec_im_val                           : std_logic_vector(7 downto 0);
 signal dec_dm_we                            : std_logic;
 signal dec_mux_alu_dm                       : std_logic;
-signal dec_bc_override_enable               : std_logic;
+signal dec_instant_branch                   : std_logic;
 signal dec_bc_override_offset               : std_logic_vector(11 downto 0);
 signal dec_sp_op                            : std_logic;
 signal dec_sp_use                           : std_logic;
 signal dec_bc_enable                        : std_logic;
 signal dec_bc_sreg_branch_target_condition  : std_logic;
 signal dec_bc_sreg_branch_test_begin        : std_logic;
-signal dec_pc_hold                          : std_logic;
+--signal dec_pc_hold                          : std_logic;
 signal dec_rcall_write                      : std_logic;
 
 --Register File
@@ -91,6 +91,7 @@ signal port_for_btns    : std_logic_vector(7 downto 0);
 signal bc_pc_override_now       : std_logic;
 signal bc_pc_override_offset    : std_logic_vector(11 downto 0);
 signal bc_mux_nop               : std_logic := '0';
+signal bc_branch_cond_ready     : std_logic;
 
 --rcall_ret
 signal rrc_dm_data_src      : std_logic;
@@ -109,8 +110,7 @@ signal mux_z_addr_src               : std_logic_vector(9 downto 0);
 signal mux_wb_data                  : std_logic_vector(7 downto 0);
 signal mux_instruction              : std_logic_vector(15 downto 0);
 signal mux_bc_override_now          : std_logic;
-signal mux_bc_override_offset       : std_logic_vector(11 downto 0);
-
+--signal mux_bc_override_offset       : std_logic_vector(11 downto 0);
 ----------------------Pipelining Signals--------------------------------------------------------
 
 --Decode <-----> RegFile
@@ -338,7 +338,6 @@ component branch_control
            branch_now                       : in STD_LOGIC;                         
            branch_offset_in             : in STD_LOGIC_VECTOR (11 downto 0);        
            branch_offset_out            : out STD_LOGIC_VECTOR (11 downto 0);       
-           hold_pc                      : out STD_LOGIC;                            
            pc_override_now              : out STD_LOGIC                             
            );
 end component;         
@@ -352,7 +351,7 @@ port map(
     addr                => pc_pm_addr,
     override_enable     => bc_pc_override_now,
     offset              => bc_pc_override_offset,
-    hold                => dec_pc_hold
+    hold                => dec_bc_enable
 );
 
 pm: program_memory
@@ -375,7 +374,7 @@ port map (
     immediate_value                     => dec_im_val,
     w_e_dm                              => dec_dm_we,
     alu_dm_mux                          => dec_mux_alu_dm,
-    pc_force_override                   => dec_bc_override_enable,
+    pc_force_override                   => dec_instant_branch,
     pc_override_offset                  => dec_bc_override_offset,
     sp_op                               => dec_sp_op,
     use_sp_addr                         => dec_sp_use,
@@ -496,12 +495,11 @@ port map(
     clk                 => clk,
     reset               => cpu_reset,
     enable_bc           => dec_bc_enable,
-    branch_cond_ready   => pl_wb_branch_cond_ready,
-    branch_now          => pl_wb_sreg_branch_result,
+    branch_cond_ready   => bc_branch_cond_ready,
+    branch_now          => mux_bc_override_now,
     branch_offset_in    => dec_bc_override_offset,
     branch_offset_out   => bc_pc_override_offset,
-    pc_override_now     => bc_pc_override_now,
-    hold_pc             => dec_pc_hold
+    pc_override_now     => bc_pc_override_now
 );
 
 --pipeline Fetch -> RegRead
@@ -656,9 +654,11 @@ mux_wb_data <= pl_wb_alu_data when pl_wb_mux_alu_dm = '0' else pl_wb_dm_data;
 --MUX the instruction going into the decoder. used for inserting NOPs to force the CPU to wait
 mux_instruction <= pm_dec_instr when bc_mux_nop = '0' else (others => '0');
 
+bc_branch_cond_ready <= pl_wb_branch_cond_ready OR dec_instant_branch; 
+
 --MUX where the PC override now signal is coming from (important for RCALL and RET)
-mux_bc_override_now <= dec_bc_override_enable when pl_wb_rrc_bc_rcall_finish = '0'  else '1';
-mux_bc_override_offset  <= dec_bc_override_offset when pl_wb_rrc_bc_rcall_finish = '0' else pl_wb_rrc_offset;
+mux_bc_override_now <= pl_wb_sreg_branch_result when dec_instant_branch = '0'  else '1';
+--mux_bc_override_offset  <= dec_bc_override_offset when pl_wb_rrc_bc_rcall_finish = '0' else pl_wb_rrc_offset;
 
 
 --Execute Stage - ALU_In Feedfwd mechanic

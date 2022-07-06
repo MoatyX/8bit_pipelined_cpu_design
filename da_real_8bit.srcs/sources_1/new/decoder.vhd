@@ -25,7 +25,6 @@ entity decoder is
         use_sp_addr                 : out std_logic;         --use the stackpointer
         rcall_write                 : out std_logic;
         ret_read                    : out std_logic;
-        rcall_ret_writter_enable    : out std_logic;
         sreg_branch_target_condition: out std_logic;
         sreg_branch_test_begin      : out std_logic;
         branch_control_enable       : out std_logic
@@ -60,7 +59,6 @@ begin
         use_sp_addr                     <= '0';
         rcall_write                     <= '0';
         ret_read                        <= '0';
-        rcall_ret_writter_enable        <= '0';
         sreg_branch_target_condition    <= '0';
         sreg_branch_test_begin          <= '0';
         branch_control_enable           <= '0';
@@ -97,6 +95,9 @@ begin
                     --RET    
                     when "1001010100001000" =>
                         dbg_op_code <= op_ret;
+                        branch_control_enable <= '1';
+                        ret_read <= '1';
+                        
 
                     when others => null;
                 end case;
@@ -349,6 +350,7 @@ begin
                     when "1101" =>
                         dbg_op_code <= op_rcall;
                         pc_override_offset <= Instr(11 downto 0);
+                        branch_control_enable <= '1';
                         rcall_write <= '1';
 
                     when others => null;

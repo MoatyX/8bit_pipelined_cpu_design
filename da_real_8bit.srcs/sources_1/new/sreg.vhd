@@ -6,9 +6,7 @@ entity sreg is
             reset              : in std_logic;
             w_e_sreg           : in std_logic_vector (7 downto 0);
             new_status_in      : in STD_LOGIC_VECTOR (7 downto 0);
-            sreg_branch_test   : in std_logic;
-            curr_status_out    : out STD_LOGIC_VECTOR (7 downto 0);
-            sreg_branch_result : out std_logic
+            curr_status_out    : out STD_LOGIC_VECTOR (7 downto 0)
         );
 end sreg;
 
@@ -71,21 +69,6 @@ begin
             end if;
         end if;
         
-    end if;
-end process;
-
-sreg_branch_testing: process(clk)
-begin
-    if(rising_edge(clk)) then
-        sreg_branch_result <= '0';
-        if(sreg_branch_test = '1') then
-            sreg_branch_result <=   (sign_bit AND w_e_sreg(4)) OR
-                                    (overflow AND w_e_sreg(3)) OR
-                                    (negative AND w_e_sreg(2)) OR
-                                    (zero     AND w_e_sreg(1)) OR
-                                    (carry    AND w_e_sreg(0));
-                                    
-        end if;
     end if;
 end process;
 

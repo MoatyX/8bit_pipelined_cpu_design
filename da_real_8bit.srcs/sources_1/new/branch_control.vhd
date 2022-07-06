@@ -36,19 +36,22 @@ entity branch_control is
            reset                            : in STD_LOGIC;
            
            enable_bc                        : in STD_LOGIC;                         --tell the branch_control, that a branch action should happen
-           branch_cond_ready                : in std_logic;                         --when this signal is high, branch_now will be read
-           branch_now                       : in STD_LOGIC;                         --the signal which forces the PC to change
+           is_stack_depended                : in std_logic;                         --set to high, when writing/reading the address on the stack is neccessary (RCALL and RET)
+           branch_cond_ready                : in std_logic;                         --when this signal is high, branch_trigger will be read
+           branch_trigger                   : in STD_LOGIC;                         --the signal which forces the PC to change
            
            branch_offset_in             : in STD_LOGIC_VECTOR (11 downto 0);        --target address offset (from decoder)
            branch_offset_out            : out STD_LOGIC_VECTOR (11 downto 0);       --the address offset going into the PC
+           branch_offset_saved          : out std_logic;
            
-           pc_override_now              : out STD_LOGIC                             --tell the pc to do the branch now
+           pc_override_now              : out STD_LOGIC;                             --tell the pc to do the branch now
+           mux_nop                      : out std_logic
            );
 end branch_control;
 
 architecture Behavioral of branch_control is
     signal branch_offset                : STD_LOGIC_VECTOR (11 downto 0) := (others => '0');
-    signal branch_offset_saved          : std_logic := '0';
+    signal offset_saved                 : std_logic := '0';
     signal local_reset                  : std_logic := '0';
 begin
 
@@ -59,17 +62,19 @@ begin
     
         if(reset = '1' OR local_reset = '1') then
             branch_offset <= (others => '0');
-            branch_offset_saved <= '0';
+            offset_saved <= '0';
             local_reset <= '0';
+            mux_nop <= '0';
         end if;
         
         --if any branch instruction was decoded, hold the PC anyway and save the incoming branch_offset
         if(enable_bc = '1') then
             branch_offset <= branch_offset_in;
-            branch_offset_saved <= '1';
+            offset_saved <= '1';
+            mux_nop <= '1';
         end if;
         
-        if((branch_offset_saved AND branch_cond_ready) = '1') then
+        if((offset_saved AND branch_cond_ready) = '1') then
             local_reset <= '1';
         end if;
         
@@ -77,6 +82,9 @@ begin
 end process;
 
 branch_offset_out <= branch_offset;
-pc_override_now <= branch_offset_saved AND branch_cond_ready AND (branch_now);
+
+--trigger when the offset value has been stablized (branch_offset_saved) AND when the trigger signal is stable (branch_cond_ready) AND then based on the trigger signal itself (branch_trigger)
+pc_override_now     <= offset_saved AND branch_cond_ready AND (branch_trigger);
+branch_offset_saved <= offset_saved;
 
 end Behavioral;

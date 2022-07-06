@@ -19,7 +19,6 @@ entity decoder is
         immediate_value             : out std_logic_vector(7 downto 0) := (others => '0');
         w_e_dm                      : out std_logic;
         alu_dm_mux                  : out std_logic;
-        pc_force_hold               : out std_logic;
         pc_force_override           : out std_logic;
         pc_override_offset          : out std_logic_vector(11 downto 0);
         sp_op                       : out std_logic;        --stackpointer operation type (increment(1) or decrement(0))
@@ -65,7 +64,6 @@ begin
         sreg_branch_target_condition    <= '0';
         sreg_branch_test_begin          <= '0';
         branch_control_enable           <= '0';
-        pc_force_hold                   <= '0';
 
         --6bit codes
         case Instr(15 downto 10) is
@@ -251,7 +249,6 @@ begin
                                 branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
                                 sreg_branch_target_condition <= '1';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
                                 sreg_branch_test_begin <= '1';      --control signal, that lets the SREG do the comparison
-                                pc_force_hold <= '1';   --hold the PC
    
                             --BRBC
                             when "01" =>
@@ -261,7 +258,6 @@ begin
                                 branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
                                 sreg_branch_target_condition <= '0';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
                                 sreg_branch_test_begin <= '1';
-                                pc_force_hold <= '1';
 
                             when others => null;
                         end case;
@@ -348,13 +344,11 @@ begin
                         pc_override_offset <= Instr(11 downto 0);
                         pc_force_override <= '1';
                         branch_control_enable <= '1';
-                        pc_force_hold <= '1';
 
                     --RCALL
                     when "1101" =>
                         dbg_op_code <= op_rcall;
                         pc_override_offset <= Instr(11 downto 0);
-                        pc_force_hold <= '1';
                         rcall_write <= '1';
 
                     when others => null;

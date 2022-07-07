@@ -63,43 +63,45 @@ begin
 mux_ports: process(clk) is
 begin
     if(rising_edge(clk)) then
-        ser     <= (others => '0');
-        seg0    <= (others => '0');
-        seg1    <= (others => '0');
-        seg2    <= (others => '0');
-        seg3    <= (others => '0');
---        portb   <= (others => '0');
---        portc   <= (others => '0');
-        if(w_e='1') then
-            case to_integer(unsigned(z_addr)) is
-                when portb_addr  => portb <= pinb;
-                when portc_addr  => portc <= pinc;
-                when ser_addr    => ser <= data;
-                when seg0_n_addr => seg0 <= data;
-                when seg1_n_addr => seg1 <= data;
-                when seg2_n_addr => seg2 <= data;
-                when seg3_n_addr => seg3 <= data;
-                when others => null;
-            end case;
-        end if;
+--                ser     <= (others => '0');
+--                seg0    <= (others => '0');
+--                seg1    <= (others => '0');
+--                seg2    <= (others => '0');
+--                seg3    <= (others => '0');
+--                portb   <= (others => '0');
+--                portc   <= (others => '0');
+                if(w_e='1') then
+                    case to_integer(unsigned(z_addr)) is
+                        when portb_addr  => portb <= pinb;
+                        when portc_addr  => portc <= pinc;
+                        when ser_addr    => ser <= data;
+                        when seg0_n_addr => seg0 <= data;
+                        when seg1_n_addr => seg1 <= data;
+                        when seg2_n_addr => seg2 <= data;
+                        when seg3_n_addr => seg3 <= data;
+                        when others => null;
+                    end case;
+                end if;
+--        end if;
+        
     end if;
 end process;
 
 save_mem: process(clk) is
 begin
     if(rising_edge(clk)) then
-        if(reset = '1') then
-            pinb <= (others => '0');
-            pinc <= (others => '0');
-            pind <= (others => '0');            
-        else
+--        if(reset = '1') then
+--            pinb <= (others => '0');
+--            pinc <= (others => '0');
+--            pind <= (others => '0');            
+--        else
             case to_integer(unsigned(z_addr)) is
                 when pinb_addr => pinb <= pinb_in;
                 when pinc_addr => pinc <= pinc_in;
                 when pind_addr => pind <= pind_in;
                 when others => null;
             end case;
-        end if;
+--        end if;
     end if;
 end process;
 

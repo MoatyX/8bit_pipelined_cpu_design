@@ -34,7 +34,7 @@ entity program_counter is
         clk                 : in  std_logic;
         addr                : out std_logic_vector (8 downto 0);
         override_enable     : in std_logic;
-        offset              : in std_logic_vector (11 downto 0);
+        offset              : in std_logic_vector (8 downto 0);
         hold                : in std_logic;
         jmp                 : in std_logic
     );
@@ -53,9 +53,9 @@ begin
 
                 if(override_enable = '1') then
                     if(jmp = '0') then
-                        PC_reg <= std_logic_vector(signed(PC_reg) + signed(offset(8 downto 0)));
+                        PC_reg <= std_logic_vector(signed(PC_reg) + signed(offset));
                     else
-                        PC_reg <= std_logic_vector(signed(offset(8 downto 0)) + 1);
+                        PC_reg <= std_logic_vector(unsigned(offset) + 1);
                     end if;
                 else
                     if(hold = '0') then

@@ -43,6 +43,7 @@ architecture Behavioral of data_memory_1024B is
 
   type regs is array(1023 downto 0) of std_logic_vector(7 downto 0); 
   signal data_mem: regs;
+--  signal data_mem:regs := (others=>(others=>'0'));
 
 begin
 

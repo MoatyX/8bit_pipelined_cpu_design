@@ -49,7 +49,7 @@ signal dec_im_val                           : std_logic_vector(7 downto 0);
 signal dec_dm_we                            : std_logic;
 signal dec_mux_alu_dm                       : std_logic;
 signal dec_instant_branch                   : std_logic;
-signal dec_bc_override_offset               : std_logic_vector(11 downto 0);
+signal dec_bc_override_offset               : std_logic_vector(8 downto 0);
 signal dec_sp_op                            : std_logic;
 signal dec_sp_use                           : std_logic;
 signal dec_bc_enable                        : std_logic;
@@ -91,7 +91,7 @@ signal port_for_btns    : std_logic_vector(7 downto 0);
 
 --Branch Control
 signal bc_pc_override_now           : std_logic;
-signal bc_pc_override_offset        : std_logic_vector(11 downto 0);
+signal bc_pc_override_offset        : std_logic_vector(8 downto 0);
 signal bc_mux_nop                   : std_logic := '0';
 signal bc_branch_cond_ready         : std_logic;
 signal bc_current_pc_byte           : std_logic_vector(7 downto 0);
@@ -100,7 +100,7 @@ signal bc_stack_write               : std_logic := '0';
 
 --RET trigger
 signal ret_cond_ready               : std_logic;
-signal ret_address                  : std_logic_vector(11 downto 0);
+signal ret_address                  : std_logic_vector(8 downto 0);
 
 --Filp flobs
 signal ff_pc_hold               : std_logic := '0';
@@ -110,6 +110,9 @@ signal ff_exec_ret_sp_use       : std_logic := '0';
 --other
 signal branch_trigger_sreg_brbs : std_logic := '0';
 signal branch_trigger_sreg_brbc : std_logic := '0';
+signal exec_brbs_cond           : std_logic_vector(7 downto 0)    := (others => '0');
+signal exec_brbc_cond           : std_logic_vector(7 downto 0)    := (others => '0');
+signal exec_bin_sreg            : std_logic_vector(7 downto 0)    := (others => '0');
 
 
 --MUXing
@@ -121,7 +124,7 @@ signal mux_instruction              : std_logic_vector(15 downto 0);
 signal mux_bc_branch_trigger        : std_logic;
 signal mux_dm_data_in               : std_logic_vector(7 downto 0);
 signal mux_dm_we                    : std_logic;
-signal mux_pc_offset                : std_logic_vector(11 downto 0);
+signal mux_pc_offset                : std_logic_vector(8 downto 0);
 signal mux_pc_override              : std_logic;
 
 ----------------------Pipelining Signals--------------------------------------------------------
@@ -163,7 +166,7 @@ signal pl_exec_sp_op                    : std_logic;
 signal pl_exec_sp_use                   : std_logic;
 signal pl_exec_sreg_branch_cond_ready   : std_logic;
 signal pl_exec_sreg_branch_target_cond  : std_logic;
-signal pl_exec_rcall_dm_write           : std_logic;
+signal pl_exec_rcall_dm_write           : std_logic := '0';
 signal pl_exec_ret_read                 : std_logic;
 signal pl_exec_rcall_dm_byte            : std_logic_vector(7 downto 0);
 signal pl_exec_rcall_write_cond_ready   : std_logic;
@@ -202,7 +205,7 @@ component program_counter is
     clk                 : in  std_logic;
     addr                : out std_logic_vector (8 downto 0);
     override_enable     : in std_logic;
-    offset              : in std_logic_vector (11 downto 0);
+    offset              : in std_logic_vector (8 downto 0);
     hold                : in std_logic;
     jmp                 : in std_logic
     );
@@ -228,7 +231,7 @@ component decoder is
         w_e_dm                      : out std_logic;
         alu_dm_mux                  : out std_logic;
         pc_force_override           : out std_logic;
-        pc_override_offset          : out std_logic_vector(11 downto 0);
+        pc_override_offset          : out std_logic_vector(8 downto 0);
         sp_op                       : out std_logic;
         use_sp_addr                 : out std_logic;
         rcall_write                 : out std_logic;
@@ -347,9 +350,9 @@ component branch_control
            rcall_write                      : in std_logic;
            branch_cond_ready                : in std_logic;                   
            branch_trigger                   : in STD_LOGIC;                   
-           branch_offset_in             : in STD_LOGIC_VECTOR (11 downto 0);  
+           branch_offset_in             : in STD_LOGIC_VECTOR (8 downto 0);  
            current_pc                   : in std_logic_vector (8 downto 0);   
-           branch_offset_out            : out STD_LOGIC_VECTOR (11 downto 0); 
+           branch_offset_out            : out STD_LOGIC_VECTOR (8 downto 0); 
            branch_offset_saved          : out std_logic;
            pc_override_now              : out STD_LOGIC;                      
            current_pc_byte              : out std_logic_vector(7 downto 0);
@@ -365,7 +368,7 @@ component ret_trigger
            byte_in : in STD_LOGIC_VECTOR (7 downto 0);
            cond_ready : out STD_LOGIC;
            branch_trigger : out STD_LOGIC;
-           pc_target_addr   : out std_logic_vector(11 downto 0)
+           pc_target_addr   : out std_logic_vector(8 downto 0)
            );
 end component;       
 
@@ -459,7 +462,7 @@ port map(
     clk     => clk,
     reset   => cpu_reset,
     op      => sp_op,     
-    use_sp  => sp_use,
+    use_sp  => sp_use,    
     addr    => sp_dm_addr
 );
 
@@ -467,7 +470,7 @@ dm: data_memory_1024B
 port map(
     clk             => clk,        
     write_enable    => mux_dm_we,
-    z_addr          => mux_z_addr_src,
+    z_addr          => mux_z_addr_src,    
     z_data_in       => mux_dm_data_in,
     data            => dm_data_out
 );
@@ -747,13 +750,29 @@ sp_op <= pl_exec_sp_op OR pl_exec_rcall_dm_write;
 sp_use <= pl_exec_sp_use OR pl_exec_rcall_dm_write OR pl_exec_ret_read OR ff_exec_ret_sp_use;
 
 
-branch_trigger_sreg_brbs <= (sreg_alu_curr_status(2) AND pl_exec_sreg_we(2)) OR
-                            (sreg_alu_curr_status(1) AND pl_exec_sreg_we(1)) OR
-                            (sreg_alu_curr_status(0) AND pl_exec_sreg_we(0));
+exec_bin_sreg <= std_logic_vector(unsigned(pl_exec_sreg_we) + 1);
+branch_trigger_sreg_brbs <= (sreg_alu_curr_status(7) AND exec_bin_sreg(7)) OR
+                            (sreg_alu_curr_status(6) AND exec_bin_sreg(6)) OR
+                            (sreg_alu_curr_status(5) AND exec_bin_sreg(5)) OR
+                            (sreg_alu_curr_status(4) AND exec_bin_sreg(4)) OR
+                            (sreg_alu_curr_status(3) AND exec_bin_sreg(3)) OR
+                            (sreg_alu_curr_status(2) AND exec_bin_sreg(2)) OR
+                            (sreg_alu_curr_status(1) AND exec_bin_sreg(1)) OR
+                            (sreg_alu_curr_status(0) AND exec_bin_sreg(0));
                             
-branch_trigger_sreg_brbc <= (NOT sreg_alu_curr_status(2) AND pl_exec_sreg_we(2)) OR
-                            (NOT sreg_alu_curr_status(1) AND pl_exec_sreg_we(1)) OR
-                            (NOT sreg_alu_curr_status(0) AND pl_exec_sreg_we(0));
+branch_trigger_sreg_brbc <= (NOT sreg_alu_curr_status(7) AND exec_bin_sreg(7)) OR
+                            (NOT sreg_alu_curr_status(6) AND exec_bin_sreg(6)) OR
+                            (NOT sreg_alu_curr_status(5) AND exec_bin_sreg(5)) OR
+                            (NOT sreg_alu_curr_status(4) AND exec_bin_sreg(4)) OR
+                            (NOT sreg_alu_curr_status(3) AND exec_bin_sreg(3)) OR
+                            (NOT sreg_alu_curr_status(2) AND exec_bin_sreg(2)) OR
+                            (NOT sreg_alu_curr_status(1) AND exec_bin_sreg(1)) OR
+                            (NOT sreg_alu_curr_status(0) AND exec_bin_sreg(0));
+
+process(sreg_alu_curr_status, pl_exec_sreg_we)
+begin
+    
+end process;
                             
 sreg_branch_result      <= branch_trigger_sreg_brbs when pl_exec_sreg_branch_target_cond = '1' else branch_trigger_sreg_brbc;                        
 

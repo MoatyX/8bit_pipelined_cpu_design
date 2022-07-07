@@ -40,9 +40,9 @@ entity branch_control is
          branch_cond_ready                : in std_logic;                         --when this signal is high, branch_trigger will be read
          branch_trigger                   : in STD_LOGIC;                         --the signal which forces the PC to change
 
-         branch_offset_in             : in STD_LOGIC_VECTOR (11 downto 0);        --target address offset (from decoder)
+         branch_offset_in             : in STD_LOGIC_VECTOR (8 downto 0);        --target address offset (from decoder)
          current_pc                   : in std_logic_vector (8 downto 0);         --the current count of the PC (required for RCALL and RET)
-         branch_offset_out            : out STD_LOGIC_VECTOR (11 downto 0);       --the address offset going into the PC
+         branch_offset_out            : out STD_LOGIC_VECTOR (8 downto 0);       --the address offset going into the PC
          branch_offset_saved          : out std_logic;
 
          pc_override_now              : out STD_LOGIC;                             --tell the pc to do the branch now
@@ -53,7 +53,7 @@ entity branch_control is
 end branch_control;
 
 architecture Behavioral of branch_control is
-    signal branch_offset                : STD_LOGIC_VECTOR (11 downto 0) := (others => '0');
+    signal branch_offset                : STD_LOGIC_VECTOR (8 downto 0) := (others => '0');
     signal offset_saved                 : std_logic := '0';
     signal local_reset                  : std_logic := '0';
     signal curr_pc                      : std_logic_vector(8 downto 0);

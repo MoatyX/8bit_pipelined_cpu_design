@@ -38,7 +38,7 @@ entity ret_trigger is
            byte_in : in STD_LOGIC_VECTOR (7 downto 0);
            cond_ready : out STD_LOGIC;
            branch_trigger : out STD_LOGIC;
-           pc_target_addr   : out std_logic_vector(11 downto 0)
+           pc_target_addr   : out std_logic_vector(8 downto 0)
            );
 end ret_trigger;
 
@@ -87,6 +87,6 @@ end process;
 
 cond_ready <= cond_rdy;
 branch_trigger <= cond_rdy;
-pc_target_addr <= "000" & high_bit & low_byte;
+pc_target_addr <= high_bit & low_byte;
 
 end Behavioral;

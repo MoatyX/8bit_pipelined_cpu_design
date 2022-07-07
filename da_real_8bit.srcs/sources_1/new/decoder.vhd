@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use IEEE.NUMERIC_STD.all;
 library work;
 use work.pkg_processor.all;
 --use work.utils.all;
@@ -20,7 +21,7 @@ entity decoder is
         w_e_dm                      : out std_logic;
         alu_dm_mux                  : out std_logic;
         pc_force_override           : out std_logic;
-        pc_override_offset          : out std_logic_vector(11 downto 0);
+        pc_override_offset          : out std_logic_vector(8 downto 0);
         sp_op                       : out std_logic;        --stackpointer operation type (increment(1) or decrement(0))
         use_sp_addr                 : out std_logic;         --use the stackpointer
         rcall_write                 : out std_logic;
@@ -246,7 +247,7 @@ begin
                             when "00" =>
                                 dbg_op_code <= "0000"&op_brbs;
                                 w_e_SREG <= "00000"&Instr(2 downto 0);    --00000sss        --use the SREG signal, since its already connected to the SREG entity
-                                pc_override_offset <= "00000"&Instr(9 downto 3);
+                                pc_override_offset <= std_logic_vector(resize(signed(Instr(9 downto 3)), pc_override_offset'length));
                                 branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
                                 sreg_branch_target_condition <= '1';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
                                 sreg_branch_test_begin <= '1';      --control signal, that lets the SREG do the comparison
@@ -255,7 +256,7 @@ begin
                             when "01" =>
                                 dbg_op_code <= "0000"&op_brbc;
                                 w_e_SREG <= "00000"&Instr(2 downto 0);    --00000sss        --use the SREG signal, since its already connected to the SREG entity
-                                pc_override_offset <= "00000"&Instr(9 downto 3);
+                                pc_override_offset <= std_logic_vector(resize(signed(Instr(9 downto 3)), pc_override_offset'length));
                                 branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
                                 sreg_branch_target_condition <= '0';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
                                 sreg_branch_test_begin <= '1';
@@ -342,14 +343,14 @@ begin
                     --RJMP
                     when "1100" =>
                         dbg_op_code <= op_rjmp;
-                        pc_override_offset <= Instr(11 downto 0);
+                        pc_override_offset <= Instr(8 downto 0);
                         pc_force_override <= '1';
                         branch_control_enable <= '1';
 
                     --RCALL
                     when "1101" =>
                         dbg_op_code <= op_rcall;
-                        pc_override_offset <= Instr(11 downto 0);
+                        pc_override_offset <= Instr(8 downto 0);
                         branch_control_enable <= '1';
                         rcall_write <= '1';
 

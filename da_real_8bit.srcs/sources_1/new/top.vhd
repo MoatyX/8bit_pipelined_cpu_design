@@ -106,6 +106,7 @@ signal ret_address                  : std_logic_vector(8 downto 0);
 signal ff_pc_hold               : std_logic := '0';
 signal ff_dec_instant_branch    : std_logic := '0';
 signal ff_exec_ret_sp_use       : std_logic := '0';
+signal ff_can_ret               : std_logic := '0';     --if RCALL has been previously called: prevent calling RET randomly
 
 --other
 signal branch_trigger_sreg_brbs : std_logic := '0';
@@ -590,7 +591,7 @@ begin
             pl_rf_rcall_dm_byte                 <= bc_current_pc_byte;
             pl_rf_rcall_dm_write                <= bc_stack_write;
             pl_rf_rcall_write_cond_ready        <= bc_rcall_write_cond_ready;
-            pl_rf_ret_read                      <= dec_ret_read;                
+            pl_rf_ret_read                      <= dec_ret_read AND ff_can_ret;                
         end if;
     end if;
 end process;
@@ -685,16 +686,25 @@ begin
             bc_mux_nop <= '0';
             ff_dec_instant_branch <= '0';
             ff_exec_ret_sp_use  <= '0';
+            ff_can_ret <= '0';
         else
             
             if(dec_bc_enable = '1') then
-                ff_pc_hold <= '1';
-                bc_mux_nop <= '1';
+--                ff_pc_hold <= '1';
+--                bc_mux_nop <= '1';
+                if(dec_rcall_write = '1') then
+                    ff_can_ret <= '1';
+                end if;
+                if(dec_ret_read = '1') then
+                    ff_can_ret <= '0';
+                end if;
+                ff_pc_hold <= NOT dec_ret_read OR ff_can_ret;
+                bc_mux_nop <= NOT dec_ret_read OR ff_can_ret;
             end if;
             
             ff_dec_instant_branch <= dec_instant_branch;
             
-            if((bc_branch_cond_ready OR ret_cond_ready) = '1') then
+            if((bc_branch_cond_ready OR (ret_cond_ready)) = '1') then
                 ff_pc_hold <= '0';
                 bc_mux_nop <= '0';
             end if;
@@ -750,7 +760,8 @@ sp_op <= pl_exec_sp_op OR pl_exec_rcall_dm_write;
 sp_use <= pl_exec_sp_use OR pl_exec_rcall_dm_write OR pl_exec_ret_read OR ff_exec_ret_sp_use;
 
 
-exec_bin_sreg <= std_logic_vector(unsigned(pl_exec_sreg_we) + 1);
+--exec_bin_sreg <= std_logic_vector(unsigned(pl_exec_sreg_we) + 1);d
+exec_bin_sreg <= pl_exec_im_val;
 branch_trigger_sreg_brbs <= (sreg_alu_curr_status(7) AND exec_bin_sreg(7)) OR
                             (sreg_alu_curr_status(6) AND exec_bin_sreg(6)) OR
                             (sreg_alu_curr_status(5) AND exec_bin_sreg(5)) OR

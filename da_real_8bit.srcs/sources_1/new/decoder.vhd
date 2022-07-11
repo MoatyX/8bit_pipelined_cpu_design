@@ -246,20 +246,41 @@ begin
                             --BRBS
                             when "00" =>
                                 dbg_op_code <= "0000"&op_brbs;
-                                w_e_SREG <= "00000"&Instr(2 downto 0);    --00000sss        --use the SREG signal, since its already connected to the SREG entity
                                 pc_override_offset <= std_logic_vector(resize(signed(Instr(9 downto 3)), pc_override_offset'length));
                                 branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
                                 sreg_branch_target_condition <= '1';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
                                 sreg_branch_test_begin <= '1';      --control signal, that lets the SREG do the comparison
+                                case Instr(2 downto 0) is
+                                    when "000" => immediate_value <= "00000001";
+                                    when "001" => immediate_value <= "00000010";
+                                    when "010" => immediate_value <= "00000100";
+                                    when "011" => immediate_value <= "00001000";
+                                    when "100" => immediate_value <= "00010000";
+                                    when "101" => immediate_value <= "00100000";
+                                    when "110" => immediate_value <= "01000000";
+                                    when "111" => immediate_value <= "10000000";
+                                    when others => null;
+                                end case;
    
                             --BRBC
                             when "01" =>
                                 dbg_op_code <= "0000"&op_brbc;
-                                w_e_SREG <= "00000"&Instr(2 downto 0);    --00000sss        --use the SREG signal, since its already connected to the SREG entity
                                 pc_override_offset <= std_logic_vector(resize(signed(Instr(9 downto 3)), pc_override_offset'length));
                                 branch_control_enable   <= '1';     --write the offset data into the Branch Control entity. it will wait for the result and adjust the PC.
                                 sreg_branch_target_condition <= '0';    --the condition, which the Branch Control Entity will wait for, to adjust the PC
                                 sreg_branch_test_begin <= '1';
+                                
+                                case Instr(2 downto 0) is
+                                    when "000" => immediate_value <= "00000001";
+                                    when "001" => immediate_value <= "00000010";
+                                    when "010" => immediate_value <= "00000100";
+                                    when "011" => immediate_value <= "00001000";
+                                    when "100" => immediate_value <= "00010000";
+                                    when "101" => immediate_value <= "00100000";
+                                    when "110" => immediate_value <= "01000000";
+                                    when "111" => immediate_value <= "10000000";
+                                    when others => null;
+                                end case;
 
                             when others => null;
                         end case;

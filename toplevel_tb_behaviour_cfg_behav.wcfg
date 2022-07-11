@@ -14,14 +14,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
-      <ZoomEndTime time="1,000.000 ns"></ZoomEndTime>
+      <ZoomEndTime time="1,000.001 ns"></ZoomEndTime>
       <Cursor1Time time="1,000.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="155"></NameColumnWidth>
+      <NameColumnWidth column_width="145"></NameColumnWidth>
       <ValueColumnWidth column_width="72"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="7" />
+   <WVObjectSize size="14" />
    <wvobject fp_name="/toplevel_tb/reset" type="logic">
       <obj_property name="ElementShortName">reset</obj_property>
       <obj_property name="ObjectShortName">reset</obj_property>
@@ -41,7 +41,6 @@
    <wvobject fp_name="/toplevel_tb/DUT/rf/register_speicher" type="array">
       <obj_property name="ElementShortName">register_speicher[31:0][7:0]</obj_property>
       <obj_property name="ObjectShortName">register_speicher[31:0][7:0]</obj_property>
-      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject fp_name="/toplevel_tb/DUT/sreg0/curr_status_out" type="array">
       <obj_property name="ElementShortName">curr_status_out[7:0]</obj_property>
@@ -51,5 +50,33 @@
       <obj_property name="ElementShortName">PC_reg[8:0]</obj_property>
       <obj_property name="ObjectShortName">PC_reg[8:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/branch_trigger_sreg_brbs" type="logic">
+      <obj_property name="ElementShortName">branch_trigger_sreg_brbs</obj_property>
+      <obj_property name="ObjectShortName">branch_trigger_sreg_brbs</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/branch_trigger_sreg_brbc" type="logic">
+      <obj_property name="ElementShortName">branch_trigger_sreg_brbc</obj_property>
+      <obj_property name="ObjectShortName">branch_trigger_sreg_brbc</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pl_wb_sreg_branch_cond_ready" type="logic">
+      <obj_property name="ElementShortName">pl_wb_sreg_branch_cond_ready</obj_property>
+      <obj_property name="ObjectShortName">pl_wb_sreg_branch_cond_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pl_wb_sreg_branch_result" type="logic">
+      <obj_property name="ElementShortName">pl_wb_sreg_branch_result</obj_property>
+      <obj_property name="ObjectShortName">pl_wb_sreg_branch_result</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pl_exec_sreg_branch_target_cond" type="logic">
+      <obj_property name="ElementShortName">pl_exec_sreg_branch_target_cond</obj_property>
+      <obj_property name="ObjectShortName">pl_exec_sreg_branch_target_cond</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/pl_exec_sreg_branch_cond_ready" type="logic">
+      <obj_property name="ElementShortName">pl_exec_sreg_branch_cond_ready</obj_property>
+      <obj_property name="ObjectShortName">pl_exec_sreg_branch_cond_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/toplevel_tb/DUT/exec_bin_sreg" type="array">
+      <obj_property name="ElementShortName">exec_bin_sreg[7:0]</obj_property>
+      <obj_property name="ObjectShortName">exec_bin_sreg[7:0]</obj_property>
    </wvobject>
 </wave_config>
